@@ -9,11 +9,26 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetAllOrganizations(c echo.Context) error {
+func GetAllOrganizationsFromExternalAPI(c echo.Context) error {
 	var orgs []*model.Org
 
-	// Pass a pointer to the orgs slice to the repository function
-	err := repository.GetAllOrganizationsFromGitea(&orgs)
+	err := repository.GetAllOrganizationsFromGitea(1, &orgs)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, orgs)
+}
+
+func SyncOrganizations(c echo.Context) error {
+	var orgs []*model.Org
+
+	err := repository.GetAllOrganizationsFromGitea(1, &orgs)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	err = repository.SyncOrganizations(orgs)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

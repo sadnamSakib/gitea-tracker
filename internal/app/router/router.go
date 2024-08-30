@@ -1,10 +1,14 @@
 package router
 
 import (
+	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/app/middleware"
 	"github.com/labstack/echo/v4"
 )
 
 func InitRoutes(e *echo.Echo) {
-	InitUserRoutes(e)
+	e.Use(middleware.Logger)
+
 	InitAdminRoutes(e)
+	InitUserRoutes(e)
+	InitSyncRoutes(e)
 }
