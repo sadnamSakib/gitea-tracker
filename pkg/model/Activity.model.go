@@ -15,12 +15,7 @@ type PerformedBy struct {
 	Username string `json:"username"`
 }
 
-type Repo struct {
-	Name  string `json:"name"`
-	Owner Owner  `json:"owner"`
-}
-
 type Owner struct {
 	FullName string `json:"full_name"`
-	Username string `json:"user_name"`
+	Username string `json:"username"`
 }

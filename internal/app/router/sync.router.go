@@ -11,4 +11,5 @@ func InitSyncRoutes(e *echo.Echo) {
 	syncGroup.GET("/orgs", controller.SyncOrganizations)
 	syncGroup.GET("/users", controller.SyncUsers)
 	syncGroup.GET("/activities", controller.SyncActivities)
+	syncGroup.GET("/repos", controller.SyncRepos)
 }

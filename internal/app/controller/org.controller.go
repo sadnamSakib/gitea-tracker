@@ -19,3 +19,15 @@ func GetAllOrganizationsFromExternalAPI(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, orgs)
 }
+
+func GetAllRepoOfOrganization(c echo.Context) error {
+	orgName := c.Param("org")
+	var repos []*model.Repo
+
+	err := repository.GetAllRepoOfOrganization(1, orgName, &repos)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, repos)
+}

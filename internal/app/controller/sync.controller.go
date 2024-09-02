@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/repository"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
@@ -119,4 +120,92 @@ func SyncOrganizations(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, orgs)
+}
+
+func SyncOrgRepos(username string, wg *sync.WaitGroup) error {
+	defer wg.Done()
+	var repos []*model.Repo
+
+	err := repository.GetAllRepoOfOrganization(1, username, &repos)
+	if err != nil {
+		return err
+	}
+
+	err = repository.SyncRepos(repos)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func SyncAllRepos() error {
+	var orgs []*model.Org
+	err := repository.GetAllOrganizationFromDB(&orgs)
+	if err != nil {
+
+		return err
+	}
+
+	wg := sync.WaitGroup{}
+	for _, org := range orgs {
+		wg.Add(1)
+		go SyncOrgRepos(org.Username, &wg)
+	}
+	wg.Wait()
+	return nil
+}
+func SyncRepos(c echo.Context) error {
+	err := SyncAllRepos()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "Repos Synced")
+}
+
+func SyncDailyUserActivities(username string) error {
+	var activities []*model.Activity
+	format := "2006-01-02"
+	currentDate := time.Now().Format(format)
+	err := repository.GetDailyUserActivity(1, username, currentDate, &activities)
+	if err != nil {
+		return err
+	}
+	err = repository.SyncDailyActivities(activities)
+	if err != nil {
+		return err
+	}
+	fmt.Println("userName: ", username, " Synced")
+	return nil
+}
+
+func SyncDailyActivities() error {
+	var users []*model.User
+	err := repository.GetAllUsersFromDB(&users)
+	if err != nil {
+		return err
+	}
+
+	wg := sync.WaitGroup{}
+	sem := make(chan struct{}, 8)
+	errorsChan := make(chan error, len(users))
+
+	for _, user := range users {
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(username string) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			if err := SyncDailyUserActivities(username); err != nil {
+				errorsChan <- err
+			}
+		}(user.Username)
+	}
+	wg.Wait()
+	close(errorsChan)
+	for e := range errorsChan {
+		err = e
+	}
+	return err
 }
