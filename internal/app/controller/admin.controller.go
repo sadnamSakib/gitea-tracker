@@ -19,19 +19,3 @@ func GetAllOrganizationsFromExternalAPI(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, orgs)
 }
-
-func SyncOrganizations(c echo.Context) error {
-	var orgs []*model.Org
-
-	err := repository.GetAllOrganizationsFromGitea(1, &orgs)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-
-	err = repository.SyncOrganizations(orgs)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.JSON(http.StatusOK, orgs)
-}

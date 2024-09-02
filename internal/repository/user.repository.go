@@ -84,7 +84,6 @@ func GetAllUserActivityFromGitea(page int, userName string, activities *[]*model
 	}
 	for _, activity := range currentPageActivities {
 		if activity.OpType == "commit_repo" {
-
 			*activities = append(*activities, &activity)
 		}
 
@@ -101,10 +100,23 @@ func SyncUsers(users []*model.User) error {
 		return err
 	}
 
-	documents := make([]interface{}, len(users))
-	for i, user := range users {
-		documents[i] = user
+	uniqueUsers := make(map[int]*model.User)
+	for _, user := range users {
+		if _, exists := uniqueUsers[user.Id]; !exists {
+			uniqueUsers[user.Id] = user
+		}
 	}
+	for _, user := range uniqueUsers {
+		fmt.Println(user.Username)
+	}
+	fmt.Println(len(uniqueUsers))
+
+	documents := make([]interface{}, 0, len(uniqueUsers))
+
+	for _, user := range uniqueUsers {
+		documents = append(documents, user)
+	}
+	fmt.Println(len(documents))
 
 	_, err = collection.InsertMany(context.Background(), documents)
 	if err != nil {
@@ -122,6 +134,10 @@ func SyncActivities(activities []*model.Activity) error {
 		documents[i] = user
 	}
 
+	if len(documents) == 0 {
+		return nil
+	}
+
 	_, err := collection.InsertMany(context.Background(), documents)
 	if err != nil {
 		return err
@@ -131,7 +147,6 @@ func SyncActivities(activities []*model.Activity) error {
 	collection = db.MongoDatabase.Collection(userCollection)
 	filter := bson.M{"username": username}
 
-	// Define the update to set both last_updated and TotalCommits
 	update := bson.M{
 		"$set": bson.M{
 			"last_updated": time.Now(),
@@ -139,7 +154,6 @@ func SyncActivities(activities []*model.Activity) error {
 		},
 	}
 
-	// Perform the update
 	_, err = collection.UpdateOne(context.Background(), filter, update)
 	if err != nil {
 		return err
