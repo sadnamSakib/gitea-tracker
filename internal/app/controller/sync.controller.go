@@ -11,55 +11,34 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func SyncOrgUsers(orgName string, wg *sync.WaitGroup) error {
-	defer wg.Done()
-	var users []*model.User
-
-	err := repository.GetAllUserFromGitea(1, orgName, &users)
-	if err != nil {
-		return err
-	}
-	fmt.Println("users:", users)
-	err = repository.SyncUsers(users)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func SyncAllOrgUsers() error {
-	var orgs []*model.Org
-	err := repository.GetAllOrganizationFromDB(&orgs)
-	if err != nil {
-
-		return err
-	}
-	fmt.Println("orgs:", orgs)
-	wg := sync.WaitGroup{}
-	for _, org := range orgs {
-		wg.Add(1)
-		go SyncOrgUsers(org.Username, &wg)
-	}
-	go func() { wg.Wait() }()
-	return nil
-}
-
 func SyncUsers(c echo.Context) error {
-	err := SyncAllOrgUsers()
+	var users []*model.User
+	err := repository.FetchUsersFromGitea(1, &users)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	err = repository.ClearUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	err = repository.SyncUsersWithDB(users)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, "Users Synced")
+	return c.JSON(http.StatusOK, fmt.Sprintf("%d users synced", len(users)))
 }
 
 func SyncUserActivities(userName string) error {
-
-	activities, err := GetUserActivityFromExternalAPI(userName)
+	var activities []*model.Activity
+	err := repository.FetchUserActivityFromGitea(1, userName, &activities)
 	if err != nil {
 		return err
 	}
-	err = repository.SyncActivities(activities)
+	err = repository.SyncActivitiesWithDB(activities)
 	if err != nil {
 		return err
 	}
@@ -69,7 +48,11 @@ func SyncUserActivities(userName string) error {
 
 func SyncAllActivities() error {
 	var users []*model.User
-	err := repository.GetAllUsersFromDB(&users)
+	err := repository.GetAllUsers(&users)
+	if err != nil {
+		return err
+	}
+	err = repository.ClearActivities()
 	if err != nil {
 		return err
 	}
@@ -99,6 +82,7 @@ func SyncAllActivities() error {
 }
 
 func SyncActivities(c echo.Context) error {
+
 	err := SyncAllActivities()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -109,12 +93,16 @@ func SyncActivities(c echo.Context) error {
 func SyncOrganizations(c echo.Context) error {
 	var orgs []*model.Org
 
-	err := repository.GetAllOrganizationsFromGitea(1, &orgs)
+	err := repository.FetchOrgsFromGitea(1, &orgs)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	err = repository.ClearOrgs()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	err = repository.SyncOrganizations(orgs)
+	err = repository.SyncOrgsWithDB(orgs)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -122,31 +110,35 @@ func SyncOrganizations(c echo.Context) error {
 	return c.JSON(http.StatusOK, orgs)
 }
 
-func SyncOrgRepos(username string, wg *sync.WaitGroup) error {
+func SyncOrgRepos(orgName string, wg *sync.WaitGroup) error {
 	defer wg.Done()
 	var repos []*model.Repo
 
-	err := repository.GetAllRepoOfOrganization(1, username, &repos)
+	err := repository.FetchRepoOfOrgFromGitea(1, orgName, &repos)
 	if err != nil {
 		return err
 	}
 
-	err = repository.SyncRepos(repos)
+	err = repository.SyncReposWithDB(repos)
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Synced %d repositories of %s\n", len(repos), orgName)
 
 	return nil
 }
 
 func SyncAllRepos() error {
 	var orgs []*model.Org
-	err := repository.GetAllOrganizationFromDB(&orgs)
+	err := repository.GetAllOrgs(&orgs)
 	if err != nil {
 
 		return err
 	}
-
+	err = repository.ClearRepos()
+	if err != nil {
+		return err
+	}
 	wg := sync.WaitGroup{}
 	for _, org := range orgs {
 		wg.Add(1)
@@ -167,11 +159,11 @@ func SyncDailyUserActivities(username string) error {
 	var activities []*model.Activity
 	format := "2006-01-02"
 	currentDate := time.Now().Format(format)
-	err := repository.GetDailyUserActivity(1, username, currentDate, &activities)
+	err := repository.FetchDailyUserActivityFromGitea(1, username, currentDate, &activities)
 	if err != nil {
 		return err
 	}
-	err = repository.SyncDailyActivities(activities)
+	err = repository.SyncDailyActivitiesWithDB(activities)
 	if err != nil {
 		return err
 	}
@@ -181,7 +173,7 @@ func SyncDailyUserActivities(username string) error {
 
 func SyncDailyActivities() error {
 	var users []*model.User
-	err := repository.GetAllUsersFromDB(&users)
+	err := repository.GetAllUsers(&users)
 	if err != nil {
 		return err
 	}
@@ -196,7 +188,6 @@ func SyncDailyActivities() error {
 		go func(username string) {
 			defer wg.Done()
 			defer func() { <-sem }()
-
 			if err := SyncDailyUserActivities(username); err != nil {
 				errorsChan <- err
 			}

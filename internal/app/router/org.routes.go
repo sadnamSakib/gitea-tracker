@@ -11,4 +11,5 @@ func InitOrgRoutes(e *echo.Echo) {
 	orgGroup.GET("/", controller.GetAllOrganizationFromDB)
 	orgGroup.GET("/:org/repos", controller.GetAllRepoFromDB)
 	orgGroup.GET("/:org/repos/:repo/users", controller.GetAllUsersOfRepo)
+
 }
