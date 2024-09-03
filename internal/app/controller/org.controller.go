@@ -31,3 +31,15 @@ func GetAllRepoOfOrganization(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, repos)
 }
+
+func GetAllRepoFromDB(c echo.Context) error {
+	var repos []*model.Repo
+	org := c.Param("org")
+
+	err := repository.GetAllRepoFromDB(org, &repos)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, repos)
+}

@@ -147,3 +147,20 @@ func SyncRepos(repos []*model.Repo) error {
 
 	return nil
 }
+
+func GetAllRepoFromDB(orgName string, repos *[]*model.Repo) error {
+	collection := db.MongoDatabase.Collection(repoCollection)
+	cursor, err := collection.Find(context.Background(), bson.M{"owner.username": orgName})
+	if err != nil {
+		return err
+	}
+	defer cursor.Close(context.Background())
+	for cursor.Next(context.Background()) {
+		var repo model.Repo
+		if err = cursor.Decode(&repo); err != nil {
+			return err
+		}
+		*repos = append(*repos, &repo)
+	}
+	return nil
+}

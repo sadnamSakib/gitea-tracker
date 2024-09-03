@@ -8,7 +8,7 @@ import (
 func InitRoutes(e *echo.Echo) {
 	e.Use(middleware.Logger)
 
-	InitAdminRoutes(e)
+	InitOrgRoutes(e)
 	InitUserRoutes(e)
 	InitSyncRoutes(e)
 }
