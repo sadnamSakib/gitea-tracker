@@ -25,7 +25,7 @@ var AppConfig Config
 
 func LoadConfig() {
 	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
+	viper.SetConfigType("json")
 	viper.AddConfigPath("configs")
 
 	if err := viper.ReadInConfig(); err != nil {
