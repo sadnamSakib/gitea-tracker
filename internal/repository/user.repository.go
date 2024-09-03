@@ -130,7 +130,9 @@ func SyncActivities(activities []*model.Activity) error {
 	collection := db.MongoDatabase.Collection(activitesCollection)
 
 	documents := make([]interface{}, len(activities))
+	repos := make(map[string]model.Repo)
 	for i, user := range activities {
+		repos[user.Repo.Name] = user.Repo
 		documents[i] = user
 	}
 
@@ -146,11 +148,16 @@ func SyncActivities(activities []*model.Activity) error {
 	username := activities[0].PerformedBy.Username
 	collection = db.MongoDatabase.Collection(userCollection)
 	filter := bson.M{"username": username}
+	repoList := make([]model.Repo, 0, len(repos))
+	for _, repo := range repos {
+		repoList = append(repoList, repo)
+	}
 
 	update := bson.M{
 		"$set": bson.M{
 			"last_updated": time.Now(),
 			"TotalCommits": len(activities),
+			"repos":        repoList,
 		},
 	}
 

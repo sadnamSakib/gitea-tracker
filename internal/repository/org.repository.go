@@ -15,44 +15,6 @@ import (
 const orgCollection = "orgs"
 const repoCollection = "repos"
 
-func GetAllOrganizationsFromGitea(page int, orgs *[]*model.Org) error {
-	// Define the Gitea API URL with access token
-	currentPageOrgs := []model.Org{}
-	limit := 50
-	url := fmt.Sprintf("https://gitea.vivasoftltd.com/api/v1/orgs?page=%d&limit=%d&access_token=%s", page, limit, config.AppConfig.GITEA.API_KEY)
-
-	// Create a new HTTP client and request
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return fmt.Errorf("failed to create HTTP request: %w", err)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to make HTTP request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&currentPageOrgs); err != nil {
-		return fmt.Errorf("failed to decode JSON response: %w", err)
-	}
-
-	if len(currentPageOrgs) == 0 {
-		return nil
-	}
-	for _, org := range currentPageOrgs {
-		*orgs = append(*orgs, &org)
-	}
-
-	fmt.Println(len(*orgs))
-
-	return nil
-}
 func GetAllOrganizationFromDB(orgs *[]*model.Org) error {
 	collection := db.MongoDatabase.Collection(orgCollection)
 	cursor, err := collection.Find(context.Background(), bson.M{})
@@ -134,7 +96,7 @@ func GetAllRepoOfOrganization(page int, orgName string, repos *[]*model.Repo) er
 
 func SyncRepos(repos []*model.Repo) error {
 	collection := db.MongoDatabase.Collection(repoCollection)
-
+	collection.Drop(context.Background())
 	documents := make([]interface{}, len(repos))
 	for i, repo := range repos {
 		documents[i] = repo
@@ -162,5 +124,38 @@ func GetAllRepoFromDB(orgName string, repos *[]*model.Repo) error {
 		}
 		*repos = append(*repos, &repo)
 	}
+	return nil
+}
+
+func GetAllUsersFromRepo(org string, repo string, users *[]*model.User) error {
+	collection := db.MongoDatabase.Collection("users")
+	filter := bson.M{
+		"repos": bson.M{
+			"$elemMatch": bson.M{
+				"name":           repo,
+				"owner.username": org,
+			},
+		},
+	}
+	cursor, err := collection.Find(context.Background(), filter)
+	if err != nil {
+		return fmt.Errorf("failed to find users: %w", err)
+	}
+	defer cursor.Close(context.Background())
+
+	// Iterate over the cursor to decode each user and append to the users slice
+	for cursor.Next(context.Background()) {
+		var user model.User
+		if err = cursor.Decode(&user); err != nil {
+			return fmt.Errorf("failed to decode user: %w", err)
+		}
+		*users = append(*users, &user)
+	}
+
+	// Check for any errors that occurred during iteration
+	if err = cursor.Err(); err != nil {
+		return fmt.Errorf("cursor encountered error: %w", err)
+	}
+
 	return nil
 }

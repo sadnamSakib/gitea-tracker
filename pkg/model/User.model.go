@@ -14,4 +14,5 @@ type User struct {
 	Weekly_commits  int       `json:"weekly_commits"`
 	Monthly_commits int       `json:"monthly_commits"`
 	Yearly_commits  int       `json:"yearly_commits"`
+	Repos           []Repo    `json:"repos"`
 }

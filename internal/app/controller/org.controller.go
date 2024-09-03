@@ -20,6 +20,17 @@ func GetAllOrganizationsFromExternalAPI(c echo.Context) error {
 	return c.JSON(http.StatusOK, orgs)
 }
 
+func GetAllOrganizationFromDB(c echo.Context) error {
+	var orgs []*model.Org
+
+	err := repository.GetAllOrganizationFromDB(&orgs)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, orgs)
+}
+
 func GetAllRepoOfOrganization(c echo.Context) error {
 	orgName := c.Param("org")
 	var repos []*model.Repo
@@ -42,4 +53,16 @@ func GetAllRepoFromDB(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, repos)
+}
+
+func GetAllUsersOfRepo(c echo.Context) error {
+	org := c.Param("org")
+	repo := c.Param("repo")
+	var users []*model.User
+	err := repository.GetAllUsersFromRepo(org, repo, &users)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, users)
 }
