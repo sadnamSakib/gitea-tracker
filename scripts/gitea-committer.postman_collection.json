@@ -1,0 +1,328 @@
+{
+	"info": {
+		"_postman_id": "d913f7b6-a563-40bc-bc1f-19c0df29a7c6",
+		"name": "gitea-committer",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26269166"
+	},
+	"item": [
+		{
+			"name": "Synchronization APIs",
+			"item": [
+				{
+					"name": "Sync All Organizations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/sync/orgs",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"sync",
+								"orgs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Sync All Repos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/sync/repos",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"sync",
+								"repos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Sync All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/sync/users",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"sync",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Sync All Activities",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/sync/activities",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"sync",
+								"activities"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Data Fetching APIs",
+			"item": [
+				{
+					"name": "User APIs",
+					"item": [
+						{
+							"name": "Get All Users",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/users/Vivasoft",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"users",
+										"Vivasoft"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get User",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/users/rakibism",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"users",
+										"rakibism"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Number Of Commits By A User Within Date Range",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/users/Nebir/activities?count_only=true",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"users",
+										"Nebir",
+										"activities"
+									],
+									"query": [
+										{
+											"key": "count_only",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Users Of A Repository",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/orgs/Vivasoft/repos/pihr_core/users",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"orgs",
+										"Vivasoft",
+										"repos",
+										"pihr_core",
+										"users"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Repository APIs",
+					"item": [
+						{
+							"name": "Get All Repositories Of Organization",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/orgs/Vivasoft/repos",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"orgs",
+										"Vivasoft",
+										"repos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Contributors Of A Repository",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/orgs/Vivasoft/repos/pihr_core/users",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"orgs",
+										"Vivasoft",
+										"repos",
+										"pihr_core",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Number Of Commits In A Repository By A User",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/users/Nebir/activities?count_only=true&repo=pihr_core",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"users",
+										"Nebir",
+										"activities"
+									],
+									"query": [
+										{
+											"key": "count_only",
+											"value": "true"
+										},
+										{
+											"key": "repo",
+											"value": "pihr_core"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Commits In A Repository By A User",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/users/Nebir/activities?repo=pihr_core",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"users",
+										"Nebir",
+										"activities"
+									],
+									"query": [
+										{
+											"key": "repo",
+											"value": "pihr_core"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Number Of Commits In A Repository By A User Within A Date Range",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/users/Nebir/activities?count_only=true&repo=pihr_core&start_date=2024-05-01&end_date=2024-09-01",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"users",
+										"Nebir",
+										"activities"
+									],
+									"query": [
+										{
+											"key": "count_only",
+											"value": "true"
+										},
+										{
+											"key": "repo",
+											"value": "pihr_core"
+										},
+										{
+											"key": "start_date",
+											"value": "2024-05-01"
+										},
+										{
+											"key": "end_date",
+											"value": "2024-09-01"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	]
+}
