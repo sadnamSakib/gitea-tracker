@@ -7,8 +7,9 @@ import (
 
 // InitAuthRoutes sets up the routes for authentication
 func InitOrgRoutes(e *echo.Echo) {
-	orgGroup := e.Group("/org")
-	orgGroup.GET("/orgs", controller.GetAllOrganizationsFromExternalAPI)
-	orgGroup.GET("/orgs/:org/repos", controller.GetAllRepoFromDB)
+	orgGroup := e.Group("/orgs")
+	orgGroup.GET("/", controller.GetAllOrganizationFromDB)
+	orgGroup.GET("/:org/repos", controller.GetAllRepoFromDB)
+	orgGroup.GET("/:org/repos/:repo/users", controller.GetAllUsersOfRepo)
 
 }

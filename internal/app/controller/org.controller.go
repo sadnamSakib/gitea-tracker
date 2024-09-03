@@ -12,7 +12,18 @@ import (
 func GetAllOrganizationsFromExternalAPI(c echo.Context) error {
 	var orgs []*model.Org
 
-	err := repository.GetAllOrganizationsFromGitea(1, &orgs)
+	err := repository.FetchOrgsFromGitea(1, &orgs)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, orgs)
+}
+
+func GetAllOrganizationFromDB(c echo.Context) error {
+	var orgs []*model.Org
+
+	err := repository.GetAllOrgs(&orgs)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -24,7 +35,7 @@ func GetAllRepoOfOrganization(c echo.Context) error {
 	orgName := c.Param("org")
 	var repos []*model.Repo
 
-	err := repository.GetAllRepoOfOrganization(1, orgName, &repos)
+	err := repository.GetAllReposFromOrg(orgName, &repos)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -36,10 +47,22 @@ func GetAllRepoFromDB(c echo.Context) error {
 	var repos []*model.Repo
 	org := c.Param("org")
 
-	err := repository.GetAllRepoFromDB(org, &repos)
+	err := repository.GetAllReposFromOrg(org, &repos)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, repos)
+}
+
+func GetAllUsersOfRepo(c echo.Context) error {
+	org := c.Param("org")
+	repo := c.Param("repo")
+	var users []*model.User
+	err := repository.GetAllUsersFromRepo(org, repo, &users)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, users)
 }

@@ -10,12 +10,3 @@ type Activity struct {
 	Repo        Repo        `json:"repo"`
 	Date        time.Time   `json:"created"`
 }
-
-type PerformedBy struct {
-	Username string `json:"username"`
-}
-
-type Owner struct {
-	FullName string `json:"full_name"`
-	Username string `json:"username"`
-}
