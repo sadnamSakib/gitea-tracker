@@ -348,7 +348,7 @@ func SyncNewActivitiesWithDB(username string, activities []model.Activity) error
 			"last_updated": time.Now(),
 		},
 		"$inc": bson.M{
-			"total_commits": len(activities), // Increment by the number of new activities
+			"total_commits": len(activities),
 		},
 	}
 
