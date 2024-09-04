@@ -119,3 +119,45 @@ func GetAllUsersFromRepo(org, repo, page, limit string) ([]model.User, error) {
 
 	return users, nil
 }
+
+func SearchRepos(org, query, page, limit string) ([]model.Repo, error) {
+	repos := make([]model.Repo, 0)
+	collection := db.MongoDatabase.Collection(repoCollection)
+	filter := bson.M{
+		"owner.username": org,
+		"name": bson.M{
+			"$regex":   query,
+			"$options": "i",
+		},
+	}
+	findOptions := options.Find()
+	if page != "" {
+		pageNum, err := strconv.Atoi(page)
+		if err != nil {
+			return nil, fmt.Errorf("invalid page number: %w", err)
+		}
+		limitNum := 10
+		if limit != "" {
+			limitNum, err = strconv.Atoi(limit)
+			if err != nil {
+				return nil, fmt.Errorf("invalid limit number: %w", err)
+			}
+		}
+
+		findOptions.SetLimit(int64(limitNum))
+		findOptions.SetSkip(int64((pageNum - 1) * limitNum))
+	}
+	cursor, err := collection.Find(context.Background(), filter, findOptions)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+	for cursor.Next(context.Background()) {
+		var repo model.Repo
+		if err = cursor.Decode(&repo); err != nil {
+			return nil, err
+		}
+		repos = append(repos, repo)
+	}
+	return repos, nil
+}

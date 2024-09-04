@@ -45,3 +45,32 @@ func GetAllUsersOfRepo(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, users)
 }
+
+func SearchRepos(c echo.Context) error {
+	org := c.Param("org")
+	query := c.QueryParam("query")
+	page := c.QueryParam("page")
+	limit := c.QueryParam("limit")
+
+	repos, err := repository.SearchRepos(org, query, page, limit)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, repos)
+}
+
+func SearchUsersOfRepo(c echo.Context) error {
+	org := c.Param("org")
+	repo := c.Param("repo")
+	query := c.QueryParam("query")
+	page := c.QueryParam("page")
+	limit := c.QueryParam("limit")
+
+	users, err := repository.SearchUsersOfRepo(org, repo, query, page, limit)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, users)
+}
