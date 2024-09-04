@@ -4,50 +4,27 @@ import (
 	"net/http"
 
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/repository"
-	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
 
 	"github.com/labstack/echo/v4"
 )
 
-func GetAllOrganizationsFromExternalAPI(c echo.Context) error {
-	var orgs []*model.Org
-
-	err := repository.FetchOrgsFromGitea(1, &orgs)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.JSON(http.StatusOK, orgs)
-}
-
 func GetAllOrganizationFromDB(c echo.Context) error {
-	var orgs []*model.Org
 
-	err := repository.GetAllOrgs(&orgs)
+	orgs, err := repository.GetAllOrgs()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, orgs)
-}
-
-func GetAllRepoOfOrganization(c echo.Context) error {
-	orgName := c.Param("org")
-	var repos []*model.Repo
-
-	err := repository.GetAllReposFromOrg(orgName, &repos)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.JSON(http.StatusOK, repos)
 }
 
 func GetAllRepoFromDB(c echo.Context) error {
-	var repos []*model.Repo
-	org := c.Param("org")
 
-	err := repository.GetAllReposFromOrg(org, &repos)
+	org := c.Param("org")
+	page := c.QueryParam("page")
+	limit := c.QueryParam("limit")
+
+	repos, err := repository.GetAllReposFromOrg(org, page, limit)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -58,8 +35,10 @@ func GetAllRepoFromDB(c echo.Context) error {
 func GetAllUsersOfRepo(c echo.Context) error {
 	org := c.Param("org")
 	repo := c.Param("repo")
-	var users []*model.User
-	err := repository.GetAllUsersFromRepo(org, repo, &users)
+	page := c.QueryParam("page")
+	limit := c.QueryParam("limit")
+
+	users, err := repository.GetAllUsersFromRepo(org, repo, page, limit)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

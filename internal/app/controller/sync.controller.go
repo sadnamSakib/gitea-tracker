@@ -12,8 +12,8 @@ import (
 )
 
 func SyncUsers(c echo.Context) error {
-	var users []*model.User
-	err := repository.FetchUsersFromGitea(1, &users)
+
+	users, err := repository.FetchUsersFromGitea(1)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -33,8 +33,8 @@ func SyncUsers(c echo.Context) error {
 }
 
 func SyncUserActivities(userName string) error {
-	var activities []*model.Activity
-	err := repository.FetchUserActivityFromGitea(1, userName, &activities)
+
+	activities, err := repository.FetchUserActivityFromGitea(1, userName)
 	if err != nil {
 		return err
 	}
@@ -42,13 +42,13 @@ func SyncUserActivities(userName string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("userName: ", userName, " Synced")
+	fmt.Printf("User %s synced with %d activities\n", userName, len(activities))
 	return nil
 }
 
 func SyncAllActivities() error {
-	var users []*model.User
-	err := repository.GetAllUsers(&users)
+
+	users, err := repository.GetAllUsers("", "")
 	if err != nil {
 		return err
 	}
@@ -58,9 +58,9 @@ func SyncAllActivities() error {
 	}
 
 	wg := sync.WaitGroup{}
-	sem := make(chan struct{}, 8)
+	sem := make(chan struct{}, 10)
 	errorsChan := make(chan error, len(users))
-
+	userSynced := 0
 	for _, user := range users {
 		wg.Add(1)
 		sem <- struct{}{}
@@ -70,6 +70,8 @@ func SyncAllActivities() error {
 
 			if err := SyncUserActivities(username); err != nil {
 				errorsChan <- err
+			} else {
+				userSynced++
 			}
 		}(user.Username)
 	}
@@ -77,12 +79,13 @@ func SyncAllActivities() error {
 	close(errorsChan)
 	for e := range errorsChan {
 		err = e
+		fmt.Println(err)
 	}
+	fmt.Printf("Synced %d users\n", userSynced)
 	return err
 }
 
 func SyncActivities(c echo.Context) error {
-
 	err := SyncAllActivities()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -91,9 +94,7 @@ func SyncActivities(c echo.Context) error {
 }
 
 func SyncOrganizations(c echo.Context) error {
-	var orgs []*model.Org
-
-	err := repository.FetchOrgsFromGitea(1, &orgs)
+	orgs, err := repository.FetchOrgsFromGitea(1)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -101,7 +102,6 @@ func SyncOrganizations(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-
 	err = repository.SyncOrgsWithDB(orgs)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -112,9 +112,8 @@ func SyncOrganizations(c echo.Context) error {
 
 func SyncOrgRepos(orgName string, wg *sync.WaitGroup) error {
 	defer wg.Done()
-	var repos []*model.Repo
 
-	err := repository.FetchRepoOfOrgFromGitea(1, orgName, &repos)
+	repos, err := repository.FetchRepoOfOrgFromGitea(1, orgName)
 	if err != nil {
 		return err
 	}
@@ -130,7 +129,7 @@ func SyncOrgRepos(orgName string, wg *sync.WaitGroup) error {
 
 func SyncAllRepos() error {
 	var orgs []*model.Org
-	err := repository.GetAllOrgs(&orgs)
+	orgs, err := repository.GetAllOrgs()
 	if err != nil {
 
 		return err
@@ -156,10 +155,10 @@ func SyncRepos(c echo.Context) error {
 }
 
 func SyncDailyUserActivities(username string) error {
-	var activities []*model.Activity
+
 	format := "2006-01-02"
 	currentDate := time.Now().Format(format)
-	err := repository.FetchDailyUserActivityFromGitea(1, username, currentDate, &activities)
+	activities, err := repository.FetchDailyUserActivityFromGitea(1, username, currentDate)
 	if err != nil {
 		return err
 	}
@@ -172,8 +171,8 @@ func SyncDailyUserActivities(username string) error {
 }
 
 func SyncDailyActivities() error {
-	var users []*model.User
-	err := repository.GetAllUsers(&users)
+
+	users, err := repository.GetAllUsers("", "")
 	if err != nil {
 		return err
 	}

@@ -3,54 +3,77 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/db"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const orgCollection = "orgs"
 const repoCollection = "repos"
 
-func GetAllOrgs(orgs *[]*model.Org) error {
+func GetAllOrgs() ([]*model.Org, error) {
+	orgs := make([]*model.Org, 0)
 	collection := db.MongoDatabase.Collection(orgCollection)
 	cursor, err := collection.Find(context.Background(), bson.M{})
 	if err != nil {
 
-		return err
+		return nil, err
 	}
 	defer cursor.Close(context.Background())
 	for cursor.Next(context.Background()) {
 		var org model.Org
 		if err = cursor.Decode(&org); err != nil {
 
-			return err
+			return nil, err
 		}
-		*orgs = append(*orgs, &org)
+		orgs = append(orgs, &org)
 	}
-	return nil
+	return orgs, nil
 
 }
 
-func GetAllReposFromOrg(orgName string, repos *[]*model.Repo) error {
+func GetAllReposFromOrg(orgName, page, limit string) ([]model.Repo, error) {
+	repos := make([]model.Repo, 0)
 	collection := db.MongoDatabase.Collection(repoCollection)
-	cursor, err := collection.Find(context.Background(), bson.M{"owner.username": orgName})
+	findOptions := options.Find()
+	if page != "" {
+		pageNum, err := strconv.Atoi(page)
+		if err != nil {
+			return nil, fmt.Errorf("invalid page number: %w", err)
+		}
+		limitNum := 10
+		if limit != "" {
+			limitNum, err = strconv.Atoi(limit)
+			if err != nil {
+				return nil, fmt.Errorf("invalid limit number: %w", err)
+			}
+		}
+
+		findOptions.SetLimit(int64(limitNum))
+		findOptions.SetSkip(int64((pageNum - 1) * limitNum))
+	}
+	cursor, err := collection.Find(context.Background(), bson.M{"owner.username": orgName}, findOptions)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer cursor.Close(context.Background())
 	for cursor.Next(context.Background()) {
 		var repo model.Repo
 		if err = cursor.Decode(&repo); err != nil {
-			return err
+			return nil, err
 		}
-		*repos = append(*repos, &repo)
+		repos = append(repos, repo)
 	}
-	return nil
+	return repos, nil
 }
 
-func GetAllUsersFromRepo(org string, repo string, users *[]*model.User) error {
+func GetAllUsersFromRepo(org, repo, page, limit string) ([]model.User, error) {
+
 	collection := db.MongoDatabase.Collection("users")
+	users := make([]model.User, 0)
 	filter := bson.M{
 		"repos": bson.M{
 			"$elemMatch": bson.M{
@@ -59,25 +82,40 @@ func GetAllUsersFromRepo(org string, repo string, users *[]*model.User) error {
 			},
 		},
 	}
-	cursor, err := collection.Find(context.Background(), filter)
+	findOptions := options.Find()
+	if page != "" {
+		pageNum, err := strconv.Atoi(page)
+		if err != nil {
+			return nil, fmt.Errorf("invalid page number: %w", err)
+		}
+		limitNum := 10
+		if limit != "" {
+			limitNum, err = strconv.Atoi(limit)
+			if err != nil {
+				return nil, fmt.Errorf("invalid limit number: %w", err)
+			}
+		}
+
+		findOptions.SetLimit(int64(limitNum))
+		findOptions.SetSkip(int64((pageNum - 1) * limitNum))
+	}
+	cursor, err := collection.Find(context.Background(), filter, findOptions)
 	if err != nil {
-		return fmt.Errorf("failed to find users: %w", err)
+		return nil, fmt.Errorf("failed to find users: %w", err)
 	}
 	defer cursor.Close(context.Background())
 
-	// Iterate over the cursor to decode each user and append to the users slice
 	for cursor.Next(context.Background()) {
 		var user model.User
 		if err = cursor.Decode(&user); err != nil {
-			return fmt.Errorf("failed to decode user: %w", err)
+			return nil, fmt.Errorf("failed to decode user: %w", err)
 		}
-		*users = append(*users, &user)
+		users = append(users, user)
 	}
 
-	// Check for any errors that occurred during iteration
 	if err = cursor.Err(); err != nil {
-		return fmt.Errorf("cursor encountered error: %w", err)
+		return nil, fmt.Errorf("cursor encountered error: %w", err)
 	}
 
-	return nil
+	return users, nil
 }

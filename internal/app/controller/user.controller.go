@@ -4,15 +4,13 @@ import (
 	"net/http"
 
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/repository"
-	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
 
 	"github.com/labstack/echo/v4"
 )
 
 func GetUser(c echo.Context) error {
-	user := &model.User{}
 	userName := c.Param("username")
-	err := repository.GetUser(userName, user)
+	user, err := repository.GetUser(userName)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -37,10 +35,23 @@ func GetUserActivityByDateRange(c echo.Context) error {
 }
 
 func GetAllUsers(c echo.Context) error {
-	users := []*model.User{}
-	err := repository.GetAllUsers(&users)
+	page := c.QueryParam("page")
+	limit := c.QueryParam("limit")
+	users, err := repository.GetAllUsers(page, limit)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, users)
+}
+
+func SearchUsers(c echo.Context) error {
+	query := c.QueryParam("query")
+	page := c.QueryParam("page")
+	limit := c.QueryParam("limit")
+	users, err := repository.SearchUsers(query, page, limit)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, users)
+
 }

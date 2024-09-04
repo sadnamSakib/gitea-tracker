@@ -17,7 +17,8 @@ type Config struct {
 		Secret string
 	}
 	GITEA struct {
-		API_KEY string
+		API_KEY  string
+		Base_URL string
 	}
 }
 

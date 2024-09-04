@@ -9,6 +9,7 @@ import (
 func InitUserRoutes(e *echo.Echo) {
 	userGroup := e.Group("/users")
 	userGroup.GET("/", controller.GetAllUsers)
+	userGroup.GET("/search", controller.SearchUsers)
 	userGroup.GET("/:username", controller.GetUser)
 	userGroup.GET("/:username/activities", controller.GetUserActivityByDateRange)
 }
