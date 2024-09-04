@@ -32,6 +32,57 @@ func SyncUsers(c echo.Context) error {
 	return c.JSON(http.StatusOK, fmt.Sprintf("%d users synced", len(users)))
 }
 
+func SyncUserHeatmap(username string) error {
+	heatmap, err := repository.FetchUserHeatmapActivityFromGitea(username)
+	if err != nil {
+		return err
+	}
+	err = repository.SyncHeatMaps(heatmap)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("User %s's Heatmap synced \n", username)
+	return nil
+}
+
+func SyncHeatMaps(c echo.Context) error {
+	users, err := repository.GetAllUsers("", "")
+	if err != nil {
+		return err
+	}
+	err = repository.ClearHeatmaps()
+	if err != nil {
+		return err
+	}
+	wg := sync.WaitGroup{}
+	sem := make(chan struct{}, 10)
+	errorsChan := make(chan error, len(users))
+	userSynced := 0
+	for _, user := range users {
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(username string) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			if err := SyncUserHeatmap(username); err != nil {
+				errorsChan <- err
+			} else {
+				userSynced++
+			}
+		}(user.Username)
+	}
+	wg.Wait()
+	close(errorsChan)
+	for e := range errorsChan {
+		err = e
+		fmt.Println(err)
+	}
+	fmt.Printf("Synced %d users\n", userSynced)
+	return err
+
+}
+
 func SyncUserActivities(userName string) error {
 
 	activities, err := repository.FetchUserActivityFromGitea(1, userName)

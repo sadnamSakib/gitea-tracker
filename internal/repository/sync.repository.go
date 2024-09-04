@@ -17,6 +17,8 @@ var (
 	client = &http.Client{}
 )
 
+const heatMapCollection = "heatmap"
+
 func FetchOrgsFromGitea(page int) ([]model.Org, error) {
 	orgs := make([]model.Org, 0)
 	url := fmt.Sprintf("%s/orgs?page=%d&access_token=%s", config.AppConfig.GITEA.Base_URL, page, config.AppConfig.GITEA.API_KEY)
@@ -146,34 +148,7 @@ func FetchUsersFromGitea(page int) ([]model.User, error) {
 	if len(users) == 0 {
 		return nil, nil
 	}
-	for i := range users {
-		user := &users[i]
 
-		heatMap := make([]model.HeatmapEntry, 0)
-
-		heatmapURL := fmt.Sprintf("%s/users/%s/heatmap?access_token=%s", config.AppConfig.GITEA.Base_URL, user.Username, config.AppConfig.GITEA.API_KEY)
-
-		heatmapReq, err := http.NewRequest("GET", heatmapURL, nil)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create HTTP request for heatmap: %w", err)
-		}
-
-		heatmapResp, err := client.Do(heatmapReq)
-		if err != nil {
-			return nil, fmt.Errorf("failed to make HTTP request for heatmap: %w", err)
-		}
-		defer heatmapResp.Body.Close()
-
-		if heatmapResp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("unexpected status code for heatmap: %d", heatmapResp.StatusCode)
-		}
-
-		if err := json.NewDecoder(heatmapResp.Body).Decode(&heatMap); err != nil {
-			return nil, fmt.Errorf("failed to decode JSON response for heatmap: %w", err)
-		}
-
-		user.Heatmap = heatMap
-	}
 	next_users, err := FetchUsersFromGitea(page + 1)
 	if err != nil {
 		return nil, err
@@ -359,6 +334,56 @@ func SyncDailyActivitiesWithDB(activities []model.Activity) error {
 
 func ClearOrgs() error {
 	collection := db.MongoDatabase.Collection(orgCollection)
+	err := collection.Drop(context.Background())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func FetchUserHeatmapActivityFromGitea(userName string) (model.Heatmap, error) {
+	heatMap := model.Heatmap{
+		Username:       userName,
+		HeatmapEntries: make([]model.HeatmapEntry, 0),
+	}
+	heatMapEntries := make([]model.HeatmapEntry, 0)
+	heatmapURL := fmt.Sprintf("%s/users/%s/heatmap?access_token=%s", config.AppConfig.GITEA.Base_URL, userName, config.AppConfig.GITEA.API_KEY)
+
+	heatmapReq, err := http.NewRequest("GET", heatmapURL, nil)
+	if err != nil {
+		return model.Heatmap{}, fmt.Errorf("failed to create HTTP request for heatmap: %w", err)
+	}
+
+	heatmapResp, err := client.Do(heatmapReq)
+	if err != nil {
+		return model.Heatmap{}, fmt.Errorf("failed to make HTTP request for heatmap: %w", err)
+	}
+	defer heatmapResp.Body.Close()
+
+	if heatmapResp.StatusCode != http.StatusOK {
+		return model.Heatmap{}, fmt.Errorf("unexpected status code for heatmap: %d", heatmapResp.StatusCode)
+	}
+
+	if err := json.NewDecoder(heatmapResp.Body).Decode(&heatMapEntries); err != nil {
+		return model.Heatmap{}, fmt.Errorf("failed to decode JSON response for heatmap: %w", err)
+	}
+	heatMap.HeatmapEntries = heatMapEntries
+	return heatMap, nil
+}
+
+func SyncHeatMaps(heatmap model.Heatmap) error {
+	collection := db.MongoDatabase.Collection(heatMapCollection)
+
+	_, err := collection.InsertOne(context.Background(), heatmap)
+	if err != nil {
+		return fmt.Errorf("failed to insert heatmap: %w", err)
+	}
+
+	return nil
+}
+
+func ClearHeatmaps() error {
+	collection := db.MongoClient.Database(heatMapCollection)
 	err := collection.Drop(context.Background())
 	if err != nil {
 		return err
