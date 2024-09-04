@@ -345,8 +345,10 @@ func SyncNewActivitiesWithDB(username string, activities []model.Activity) error
 
 	update := bson.M{
 		"$set": bson.M{
-			"last_updated":  time.Now(),
-			"total_commits": bson.M{"$sum": len(activities)},
+			"last_updated": time.Now(),
+		},
+		"$inc": bson.M{
+			"total_commits": len(activities), // Increment by the number of new activities
 		},
 	}
 
