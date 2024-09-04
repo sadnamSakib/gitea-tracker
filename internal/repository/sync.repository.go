@@ -216,8 +216,21 @@ func FetchUserActivityFromGitea(page int, userName string) ([]model.Activity, er
 	return commitActivities, nil
 }
 
-func SyncActivitiesWithDB(activities []model.Activity) error {
+func SyncActivitiesWithDB(username string, activities []model.Activity) error {
 	if len(activities) == 0 {
+		collection := db.MongoDatabase.Collection(userCollection)
+		filter := bson.M{"username": username}
+
+		update := bson.M{
+			"$set": bson.M{
+				"last_updated": time.Now(),
+			},
+		}
+
+		_, err := collection.UpdateOne(context.Background(), filter, update)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 	collection := db.MongoDatabase.Collection(activitesCollection)
@@ -233,7 +246,6 @@ func SyncActivitiesWithDB(activities []model.Activity) error {
 		return err
 	}
 
-	username := activities[0].PerformedBy.Username
 	collection = db.MongoDatabase.Collection(userCollection)
 	filter := bson.M{"username": username}
 	repoList := make([]model.Repo, 0, len(repos))
@@ -257,7 +269,8 @@ func SyncActivitiesWithDB(activities []model.Activity) error {
 	return nil
 }
 
-func FetchDailyUserActivityFromGitea(page int, userName string, date string) ([]model.Activity, error) {
+func FetchNewUserActivityFromGitea(page int, userName string, date string, lastUpdateTime time.Time) ([]model.Activity, error) {
+
 	activities := make([]model.Activity, 0)
 	url := fmt.Sprintf("%s/users/%s/activities/feeds?only-performed-by=true&page=%d&date=%s&access_token=%s", config.AppConfig.GITEA.Base_URL, userName, page, date, config.AppConfig.GITEA.API_KEY)
 
@@ -280,16 +293,17 @@ func FetchDailyUserActivityFromGitea(page int, userName string, date string) ([]
 		return nil, fmt.Errorf("failed to decode JSON response: %w", err)
 	}
 
-	if len(activities) == 0 {
-		return nil, nil
-	}
 	commitActivities := make([]model.Activity, 0)
 	for _, activity := range activities {
-		if activity.OpType == "commit_repo" {
+		if activity.OpType == "commit_repo" && activity.Date.After(lastUpdateTime) {
 			commitActivities = append(commitActivities, activity)
 		}
 	}
-	next_activities, err := FetchDailyUserActivityFromGitea(page+1, userName, date)
+
+	if len(commitActivities) == 0 {
+		return nil, nil
+	}
+	next_activities, err := FetchNewUserActivityFromGitea(page+1, userName, date, lastUpdateTime)
 	if err != nil {
 		return nil, err
 	}
@@ -297,8 +311,21 @@ func FetchDailyUserActivityFromGitea(page int, userName string, date string) ([]
 	return commitActivities, nil
 }
 
-func SyncDailyActivitiesWithDB(activities []model.Activity) error {
+func SyncNewActivitiesWithDB(username string, activities []model.Activity) error {
 	if len(activities) == 0 {
+		collection := db.MongoDatabase.Collection(userCollection)
+		filter := bson.M{"username": username}
+
+		update := bson.M{
+			"$set": bson.M{
+				"last_updated": time.Now(),
+			},
+		}
+
+		_, err := collection.UpdateOne(context.Background(), filter, update)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -313,7 +340,6 @@ func SyncDailyActivitiesWithDB(activities []model.Activity) error {
 		return err
 	}
 
-	username := activities[0].PerformedBy.Username
 	collection = db.MongoDatabase.Collection(userCollection)
 	filter := bson.M{"username": username}
 

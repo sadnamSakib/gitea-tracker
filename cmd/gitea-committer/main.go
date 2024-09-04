@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/app/router"
+	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/app/service"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/config"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/db"
 	"github.com/labstack/echo/v4"
@@ -32,6 +33,7 @@ func main() {
 	}))
 
 	router.InitRoutes(e)
+	go service.Scheduler(23, 0, 0, service.SyncDailyData)
 
 	log.Fatal(e.Start(":8080"))
 }

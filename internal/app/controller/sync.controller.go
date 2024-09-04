@@ -11,25 +11,29 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func SyncUsers(c echo.Context) error {
-
+func SyncAllUsers() error {
 	users, err := repository.FetchUsersFromGitea(1)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		return err
 	}
 	err = repository.ClearUsers()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		return err
 	}
 	err = repository.SyncUsersWithDB(users)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		return err
 	}
 
+	return nil
+}
+
+func SyncUsers(c echo.Context) error {
+	err := SyncAllUsers()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, fmt.Sprintf("%d users synced", len(users)))
+	return c.JSON(http.StatusOK, "Users Synced")
 }
 
 func SyncUserHeatmap(username string) error {
@@ -45,7 +49,7 @@ func SyncUserHeatmap(username string) error {
 	return nil
 }
 
-func SyncHeatMaps(c echo.Context) error {
+func SyncAllHeatmaps() error {
 	users, err := repository.GetAllUsers("", "")
 	if err != nil {
 		return err
@@ -80,7 +84,14 @@ func SyncHeatMaps(c echo.Context) error {
 	}
 	fmt.Printf("Synced %d users\n", userSynced)
 	return err
+}
 
+func SyncHeatMaps(c echo.Context) error {
+	err := SyncAllHeatmaps()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "Heatmaps Synced")
 }
 
 func SyncUserActivities(userName string) error {
@@ -89,7 +100,7 @@ func SyncUserActivities(userName string) error {
 	if err != nil {
 		return err
 	}
-	err = repository.SyncActivitiesWithDB(activities)
+	err = repository.SyncActivitiesWithDB(userName, activities)
 	if err != nil {
 		return err
 	}
@@ -144,21 +155,29 @@ func SyncActivities(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Activities Synced")
 }
 
-func SyncOrganizations(c echo.Context) error {
+func SyncAllOrganizations() error {
 	orgs, err := repository.FetchOrgsFromGitea(1)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return err
 	}
 	err = repository.ClearOrgs()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return err
 	}
 	err = repository.SyncOrgsWithDB(orgs)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return err
 	}
 
-	return c.JSON(http.StatusOK, orgs)
+	return nil
+}
+
+func SyncOrganizations(c echo.Context) error {
+	err := SyncAllOrganizations()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "Organizations Synced")
 }
 
 func SyncOrgRepos(orgName string, wg *sync.WaitGroup) error {
@@ -205,19 +224,25 @@ func SyncRepos(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Repos Synced")
 }
 
-func SyncDailyUserActivities(username string) error {
+func SyncNewUserActivities(username string) error {
 
 	format := "2006-01-02"
 	currentDate := time.Now().Format(format)
-	activities, err := repository.FetchDailyUserActivityFromGitea(1, username, currentDate)
+	user, err := repository.GetUser(username)
+
 	if err != nil {
 		return err
 	}
-	err = repository.SyncDailyActivitiesWithDB(activities)
+	lastUpdateTime := user.Last_updated
+	activities, err := repository.FetchNewUserActivityFromGitea(1, username, currentDate, lastUpdateTime)
 	if err != nil {
 		return err
 	}
-	fmt.Println("userName: ", username, " Synced")
+	err = repository.SyncNewActivitiesWithDB(username, activities)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("User %s has %d new activities.\n", username, len(activities))
 	return nil
 }
 
@@ -229,17 +254,19 @@ func SyncDailyActivities() error {
 	}
 
 	wg := sync.WaitGroup{}
-	sem := make(chan struct{}, 8)
+	sem := make(chan struct{}, 10)
 	errorsChan := make(chan error, len(users))
-
+	usersSynced := 0
 	for _, user := range users {
 		wg.Add(1)
 		sem <- struct{}{}
 		go func(username string) {
 			defer wg.Done()
 			defer func() { <-sem }()
-			if err := SyncDailyUserActivities(username); err != nil {
+			if err := SyncNewUserActivities(username); err != nil {
 				errorsChan <- err
+			} else {
+				usersSynced++
 			}
 		}(user.Username)
 	}
@@ -247,6 +274,16 @@ func SyncDailyActivities() error {
 	close(errorsChan)
 	for e := range errorsChan {
 		err = e
+		fmt.Println(err)
 	}
+	fmt.Println("Synced ", usersSynced, " users")
 	return err
+}
+
+func SyncNewActivity(c echo.Context) error {
+	err := SyncDailyActivities()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "New Activities Synced")
 }

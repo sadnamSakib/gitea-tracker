@@ -55,7 +55,7 @@ func GetUser(userName string) (model.User, error) {
 	user := model.User{}
 	collection := db.MongoDatabase.Collection(userCollection)
 	filter := bson.M{"username": userName}
-	err := collection.FindOne(context.Background(), filter).Decode(user)
+	err := collection.FindOne(context.Background(), filter).Decode(&user)
 	if err != nil {
 		return user, err
 	}
