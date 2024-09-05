@@ -11,6 +11,7 @@ import (
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/db"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var (
@@ -162,7 +163,17 @@ func SyncUsersWithDB(users []model.User) error {
 	documents := make([]interface{}, 0, len(users))
 
 	for _, user := range users {
-		documents = append(documents, user)
+
+		filter := bson.M{"username": user.Username}
+		var existingUser model.User
+		err := collection.FindOne(context.Background(), filter).Decode(&existingUser)
+
+		if err == mongo.ErrNoDocuments {
+			documents = append(documents, user)
+		} else if err != nil {
+
+			return err
+		}
 	}
 	fmt.Println(len(documents))
 
@@ -330,10 +341,11 @@ func SyncNewActivitiesWithDB(username string, activities []model.Activity) error
 	}
 
 	collection := db.MongoDatabase.Collection(activitesCollection)
-
 	documents := make([]interface{}, len(activities))
-	for i, user := range activities {
-		documents[i] = user
+	reposSet := make(map[string]model.Repo)
+	for i, activity := range activities {
+		documents[i] = activity
+		reposSet[activity.Repo.Name] = activity.Repo
 	}
 	_, err := collection.InsertMany(context.Background(), documents)
 	if err != nil {
@@ -343,9 +355,26 @@ func SyncNewActivitiesWithDB(username string, activities []model.Activity) error
 	collection = db.MongoDatabase.Collection(userCollection)
 	filter := bson.M{"username": username}
 
+	var user model.User
+	err = collection.FindOne(context.Background(), filter).Decode(&user)
+	if err != nil {
+		return err
+	}
+
+	for _, repo := range user.Repos {
+		reposSet[repo.Name] = repo
+	}
+
+	repoList := make([]model.Repo, 0, len(reposSet))
+	for _, repo := range reposSet {
+		repoList = append(repoList, repo)
+	}
+	fmt.Println("Total repos : ", len(reposSet), " for user ", username)
+
 	update := bson.M{
 		"$set": bson.M{
 			"last_updated": time.Now(),
+			"repos":        repoList,
 		},
 		"$inc": bson.M{
 			"total_commits": len(activities),
@@ -411,7 +440,7 @@ func SyncHeatMaps(heatmap model.Heatmap) error {
 }
 
 func ClearHeatmaps() error {
-	collection := db.MongoClient.Database(heatMapCollection)
+	collection := db.MongoDatabase.Collection(heatMapCollection)
 	err := collection.Drop(context.Background())
 	if err != nil {
 		return err

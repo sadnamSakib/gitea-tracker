@@ -16,10 +16,7 @@ func SyncAllUsers() error {
 	if err != nil {
 		return err
 	}
-	err = repository.ClearUsers()
-	if err != nil {
-		return err
-	}
+
 	err = repository.SyncUsersWithDB(users)
 	if err != nil {
 		return err
@@ -306,6 +303,7 @@ func DailySync(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	fmt.Println("Repos Synchronised")
+
 	err = SyncAllHeatmaps()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())

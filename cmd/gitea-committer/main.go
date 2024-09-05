@@ -33,7 +33,9 @@ func main() {
 	}))
 
 	router.InitRoutes(e)
-	go service.Scheduler(23, 0, 0, service.SyncDailyData)
+
+	c := service.InitCronScheduler()
+	defer c.Stop()
 
 	log.Fatal(e.Start(":8080"))
 }
