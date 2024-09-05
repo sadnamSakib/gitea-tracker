@@ -55,3 +55,12 @@ func SearchUsers(c echo.Context) error {
 	return c.JSON(http.StatusOK, users)
 
 }
+
+func GetUserHeatmap(c echo.Context) error {
+	userName := c.Param("username")
+	heatmaps, err := repository.GetUserHeatmap(userName)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, heatmaps)
+}

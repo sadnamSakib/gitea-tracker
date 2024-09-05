@@ -14,6 +14,7 @@ import (
 
 const userCollection = "users"
 const activitesCollection = "activities"
+const heatmapCollection = "heatmap"
 
 func GetAllUsers(page, limit string) ([]model.User, error) {
 	users := make([]model.User, 0)
@@ -197,4 +198,18 @@ func SearchUsersOfRepo(org, repo, query, page, limit string) ([]model.User, erro
 		users = append(users, user)
 	}
 	return users, nil
+}
+
+func GetUserHeatmap(userName string) (model.Heatmap, error) {
+	heatmap := model.Heatmap{}
+	collection := db.MongoDatabase.Collection(heatmapCollection)
+	filter := bson.M{
+		"username": userName,
+	}
+	err := collection.FindOne(context.Background(), filter).Decode(&heatmap)
+	if err != nil {
+		return heatmap, err
+	}
+
+	return heatmap, nil
 }

@@ -287,3 +287,33 @@ func SyncNewActivity(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, "New Activities Synced")
 }
+
+func DailySync(c echo.Context) error {
+	err := SyncAllOrganizations()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	fmt.Println("Organizations Synchronised")
+
+	err = SyncAllUsers()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	fmt.Println("Users Synchronised")
+
+	err = SyncAllRepos()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	fmt.Println("Repos Synchronised")
+	err = SyncAllHeatmaps()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	err = SyncDailyActivities()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	fmt.Println("Daily Activities Synchronised")
+	return c.JSON(http.StatusOK, "Daily Sync Completed")
+}
