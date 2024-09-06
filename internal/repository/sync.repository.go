@@ -26,21 +26,21 @@ func FetchOrgsFromGitea(page int) ([]model.Org, error) {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
+		return orgs, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make HTTP request: %w", err)
+		return orgs, fmt.Errorf("failed to make HTTP request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return orgs, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&orgs); err != nil {
-		return nil, fmt.Errorf("failed to decode JSON response: %w", err)
+		return orgs, fmt.Errorf("failed to decode JSON response: %w", err)
 	}
 
 	if len(orgs) == 0 {
@@ -48,7 +48,7 @@ func FetchOrgsFromGitea(page int) ([]model.Org, error) {
 	}
 	next_orgs, err := FetchOrgsFromGitea(page + 1)
 	if err != nil {
-		return nil, err
+		return orgs, err
 	}
 	orgs = append(orgs, next_orgs...)
 	return orgs, nil
@@ -65,6 +65,7 @@ func SyncOrgsWithDB(orgs []model.Org) error {
 
 	_, err := collection.InsertMany(context.Background(), documents)
 	if err != nil {
+
 		return err
 	}
 
@@ -79,21 +80,21 @@ func FetchRepoOfOrgFromGitea(page int, orgName string) ([]model.Repo, error) {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
+		return repos, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make HTTP request: %w", err)
+		return repos, fmt.Errorf("failed to make HTTP request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return repos, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&repos); err != nil {
-		return nil, fmt.Errorf("failed to decode JSON response: %w", err)
+		return repos, fmt.Errorf("failed to decode JSON response: %w", err)
 	}
 
 	if len(repos) == 0 {
@@ -101,7 +102,7 @@ func FetchRepoOfOrgFromGitea(page int, orgName string) ([]model.Repo, error) {
 	}
 	next_repos, err := FetchRepoOfOrgFromGitea(page+1, orgName)
 	if err != nil {
-		return nil, err
+		return repos, err
 	}
 	repos = append(repos, next_repos...)
 	return repos, nil
@@ -129,30 +130,30 @@ func FetchUsersFromGitea(page int) ([]model.User, error) {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
+		return users, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make HTTP request: %w", err)
+		return users, fmt.Errorf("failed to make HTTP request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return users, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&users); err != nil {
-		return nil, fmt.Errorf("failed to decode JSON response: %w", err)
+		return users, fmt.Errorf("failed to decode JSON response: %w", err)
 	}
 
 	if len(users) == 0 {
-		return nil, nil
+		return users, nil
 	}
 
 	next_users, err := FetchUsersFromGitea(page + 1)
 	if err != nil {
-		return nil, err
+		return users, err
 	}
 	users = append(users, next_users...)
 	return users, nil
@@ -175,8 +176,9 @@ func SyncUsersWithDB(users []model.User) error {
 			return err
 		}
 	}
-	fmt.Println(len(documents))
-
+	if len(documents) == 0 {
+		return nil
+	}
 	_, err := collection.InsertMany(context.Background(), documents)
 	if err != nil {
 		return err
@@ -192,25 +194,25 @@ func FetchUserActivityFromGitea(page int, userName string) ([]model.Activity, er
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
+		return activities, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make HTTP request: %w", err)
+		return activities, fmt.Errorf("failed to make HTTP request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return activities, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&activities); err != nil {
-		return nil, fmt.Errorf("failed to decode JSON response: %w", err)
+		return activities, fmt.Errorf("failed to decode JSON response: %w", err)
 	}
 
 	if len(activities) == 0 {
-		return nil, nil
+		return activities, nil
 	}
 	commitActivities := make([]model.Activity, 0)
 	for _, activity := range activities {
@@ -221,7 +223,7 @@ func FetchUserActivityFromGitea(page int, userName string) ([]model.Activity, er
 
 	next_activities, err := FetchUserActivityFromGitea(page+1, userName)
 	if err != nil {
-		return nil, err
+		return activities, err
 	}
 	commitActivities = append(commitActivities, next_activities...)
 	return commitActivities, nil
@@ -287,21 +289,21 @@ func FetchNewUserActivityFromGitea(page int, userName string, date string, lastU
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
+		return activities, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make HTTP request: %w", err)
+		return activities, fmt.Errorf("failed to make HTTP request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return activities, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&activities); err != nil {
-		return nil, fmt.Errorf("failed to decode JSON response: %w", err)
+		return activities, fmt.Errorf("failed to decode JSON response: %w", err)
 	}
 
 	commitActivities := make([]model.Activity, 0)
@@ -312,11 +314,11 @@ func FetchNewUserActivityFromGitea(page int, userName string, date string, lastU
 	}
 
 	if len(commitActivities) == 0 {
-		return nil, nil
+		return activities, nil
 	}
 	next_activities, err := FetchNewUserActivityFromGitea(page+1, userName, date, lastUpdateTime)
 	if err != nil {
-		return nil, err
+		return activities, err
 	}
 	commitActivities = append(commitActivities, next_activities...)
 	return commitActivities, nil
