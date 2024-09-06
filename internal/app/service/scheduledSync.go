@@ -44,7 +44,7 @@ func SyncDailyData() {
 
 func InitCronScheduler() *cron.Cron {
 	c := cron.New()
-	c.AddFunc("40 11 * * *", SyncDailyData)
+	c.AddFunc("30 23 * * *", SyncDailyData)
 	c.Start()
 	fmt.Println("Cron Scheduler Initialized")
 	return c
