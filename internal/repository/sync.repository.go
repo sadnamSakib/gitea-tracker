@@ -160,8 +160,15 @@ func FetchUsersFromGitea(page int) ([]model.User, error) {
 }
 func SyncUsersWithDB(users []model.User) error {
 	collection := db.MongoDatabase.Collection(userCollection)
-
-	documents := make([]interface{}, 0, len(users))
+	existingUsers, err := GetAllUsers("", "")
+	if err != nil {
+		return err
+	}
+	existingUserMap := make(map[string]model.User)
+	for _, user := range users {
+		existingUserMap[user.Username] = user
+	}
+	documentsToBeAdded := make([]interface{}, 0, len(users))
 
 	for _, user := range users {
 
@@ -170,16 +177,25 @@ func SyncUsersWithDB(users []model.User) error {
 		err := collection.FindOne(context.Background(), filter).Decode(&existingUser)
 
 		if err == mongo.ErrNoDocuments {
-			documents = append(documents, user)
-		} else if err != nil {
-
-			return err
+			documentsToBeAdded = append(documentsToBeAdded, user)
+			continue
 		}
 	}
-	if len(documents) == 0 {
+	for _, user := range existingUsers {
+		if _, ok := existingUserMap[user.Username]; !ok {
+			_, err := collection.DeleteOne(context.Background(), bson.M{"username": user.Username})
+			if err != nil {
+				fmt.Println("Error deleting user ", user.Username)
+				continue
+			}
+
+		}
+	}
+
+	if len(documentsToBeAdded) == 0 {
 		return nil
 	}
-	_, err := collection.InsertMany(context.Background(), documents)
+	_, err = collection.InsertMany(context.Background(), documentsToBeAdded)
 	if err != nil {
 		return err
 	}

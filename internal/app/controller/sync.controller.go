@@ -38,6 +38,7 @@ func SyncUserHeatmap(username string, wg *sync.WaitGroup, sem chan struct{}) err
 	defer func() { <-sem }()
 	heatmap, err := repository.FetchUserHeatmapActivityFromGitea(username)
 	if err != nil {
+		fmt.Println(username, err.Error())
 		return err
 	}
 	err = repository.SyncHeatMaps(heatmap)
@@ -254,6 +255,7 @@ func SyncNewUserActivities(username string, wg *sync.WaitGroup, sem chan struct{
 		return err
 	}
 	fmt.Printf("User %s has %d new activities.\n", username, len(activities))
+	fmt.Printf("activities: %v\n", activities)
 	return nil
 }
 
