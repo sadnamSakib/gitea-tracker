@@ -42,6 +42,7 @@ func SyncUserHeatmap(username string, wg *sync.WaitGroup, sem chan struct{}) err
 	}
 	err = repository.SyncHeatMaps(heatmap)
 	if err != nil {
+		fmt.Println(username, err.Error())
 		return err
 	}
 	fmt.Printf("User %s's Heatmap synced \n", username)

@@ -236,7 +236,7 @@ func SyncActivitiesWithDB(username string, activities []model.Activity) error {
 
 		update := bson.M{
 			"$set": bson.M{
-				"last_updated": time.Now(),
+				"last_updated": time.Now().UTC(),
 			},
 		}
 
@@ -266,9 +266,11 @@ func SyncActivitiesWithDB(username string, activities []model.Activity) error {
 		repoList = append(repoList, repo)
 	}
 
+	lastUpdateTime := time.Now().UTC()
+
 	update := bson.M{
 		"$set": bson.M{
-			"last_updated":  time.Now(),
+			"last_updated":  lastUpdateTime,
 			"total_commits": len(activities),
 			"repos":         repoList,
 		},
@@ -309,6 +311,7 @@ func FetchNewUserActivityFromGitea(page int, userName string, date string, lastU
 	commitActivities := make([]model.Activity, 0)
 	for _, activity := range activities {
 		if activity.OpType == "commit_repo" && activity.Date.After(lastUpdateTime) {
+			fmt.Println(userName, activity.Date, lastUpdateTime)
 			commitActivities = append(commitActivities, activity)
 		}
 	}
@@ -331,7 +334,7 @@ func SyncNewActivitiesWithDB(username string, activities []model.Activity) error
 
 		update := bson.M{
 			"$set": bson.M{
-				"last_updated": time.Now(),
+				"last_updated": time.Now().UTC(),
 			},
 		}
 
@@ -375,7 +378,7 @@ func SyncNewActivitiesWithDB(username string, activities []model.Activity) error
 
 	update := bson.M{
 		"$set": bson.M{
-			"last_updated": time.Now(),
+			"last_updated": time.Now().UTC(),
 			"repos":        repoList,
 		},
 		"$inc": bson.M{
