@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
-	"time"
 
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/repository"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
@@ -238,15 +237,14 @@ func SyncRepos(c echo.Context) error {
 func SyncNewUserActivities(username string, wg *sync.WaitGroup, sem chan struct{}) error {
 	defer wg.Done()
 	defer func() { <-sem }()
-	format := "2006-01-02"
-	currentDate := time.Now().Format(format)
+
 	user, err := repository.GetUser(username)
 
 	if err != nil {
 		return err
 	}
 	lastUpdateTime := user.Last_updated
-	activities, err := repository.FetchNewUserActivityFromGitea(1, username, currentDate, lastUpdateTime)
+	activities, err := repository.FetchNewUserActivityFromGitea(1, username, lastUpdateTime)
 	if err != nil {
 		return err
 	}

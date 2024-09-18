@@ -300,10 +300,10 @@ func SyncActivitiesWithDB(username string, activities []model.Activity) error {
 	return nil
 }
 
-func FetchNewUserActivityFromGitea(page int, userName string, date string, lastUpdateTime time.Time) ([]model.Activity, error) {
+func FetchNewUserActivityFromGitea(page int, userName string, lastUpdateTime time.Time) ([]model.Activity, error) {
 
 	activities := make([]model.Activity, 0)
-	url := fmt.Sprintf("%s/users/%s/activities/feeds?only-performed-by=true&page=%d&date=%s&access_token=%s", config.AppConfig.GITEA.Base_URL, userName, page, date, config.AppConfig.GITEA.API_KEY)
+	url := fmt.Sprintf("%s/users/%s/activities/feeds?only-performed-by=true&page=%d&access_token=%s", config.AppConfig.GITEA.Base_URL, userName, page, config.AppConfig.GITEA.API_KEY)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -330,12 +330,15 @@ func FetchNewUserActivityFromGitea(page int, userName string, date string, lastU
 			fmt.Println(userName, activity.Date, lastUpdateTime)
 			commitActivities = append(commitActivities, activity)
 		}
+		if activity.Date.Before(lastUpdateTime) {
+			return activities, nil
+		}
 	}
 
 	if len(commitActivities) == 0 {
 		return activities, nil
 	}
-	next_activities, err := FetchNewUserActivityFromGitea(page+1, userName, date, lastUpdateTime)
+	next_activities, err := FetchNewUserActivityFromGitea(page+1, userName, lastUpdateTime)
 	if err != nil {
 		return activities, err
 	}
