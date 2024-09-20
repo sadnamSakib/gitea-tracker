@@ -331,12 +331,12 @@ func FetchNewUserActivityFromGitea(page int, userName string, lastUpdateTime tim
 			commitActivities = append(commitActivities, activity)
 		}
 		if activity.Date.Before(lastUpdateTime) {
-			return activities, nil
+			return commitActivities, nil
 		}
 	}
 
 	if len(commitActivities) == 0 {
-		return activities, nil
+		return commitActivities, nil
 	}
 	next_activities, err := FetchNewUserActivityFromGitea(page+1, userName, lastUpdateTime)
 	if err != nil {
