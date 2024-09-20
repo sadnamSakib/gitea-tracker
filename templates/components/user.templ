@@ -1,0 +1,180 @@
+package components
+
+import (
+    "gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
+    "strconv"
+    "fmt"
+)
+
+var onceHandle = templ.NewOnceHandle()
+
+templ User(user model.User, dailyCommitCountList []int, repoCommitCountList []int, repoNameList []string, dateList []string, viewBy string) {
+    <!DOCTYPE html>
+    <html lang="en">
+        @Header()
+        <body>
+            <!-- Include Chart.js from CDN -->
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+            
+            @UserScript(user.Username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList)
+
+            <div class="container mx-auto py-10"style="min-height:100vh;">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <div class="col-span-1 bg-white shadow-md rounded-lg p-4">
+                       
+                        <div class="flex justify-center mb-4">
+                            <img src={user.Avatar_url} alt={fmt.Sprintf("Avatar of %s", user.Username)} class="rounded-full w-32 h-32 object-cover">
+                        </div>
+
+                        
+                        <div class="text-lg font-semibold text-center mb-2">{user.Username}</div>
+
+                      
+                        <div class="text-sm text-gray-700 text-center mb-2">
+                            <strong>Email:</strong> {user.Email}
+                        </div>
+                        
+                        <div class="text-sm text-gray-700 text-center mb-2">
+                            <strong>Total Commits:</strong> {strconv.Itoa(user.Total_commits)}
+                        </div>
+
+                       
+                        <div class="text-sm text-gray-700 text-center mb-2">
+                            <strong>Repositories:</strong> {strconv.Itoa(len(repoNameList))}
+                        </div>
+                        <div class="mb-2">
+                            <canvas id="repoCommitChart" width="300" height="300"></canvas>
+                        </div>
+                        
+                    </div>
+
+                   
+                    <div class="col-span-2">
+
+                        <!-- Date Selection and Repo Selection Dropdown -->
+                        <div class="flex justify-end mx-auto">
+                            <div>
+                                <label for="viewBy" >View By:</label>
+                                <select id="viewBy" name="viewBy" class="border p-1">
+                                    switch viewBy {
+                                        case "week":
+                                            <option value="week" selected>Last Week</option>
+                                            <option value="month" >Last Month</option>
+                                            <option value="year" >Last Year</option>
+                                            <option value="allTime" >All Time</option>
+                                        case "month":
+                                            <option value="week" >Last Week</option>
+                                            <option value="month" selected>Last Month</option>
+                                            <option value="year" >Last Year</option>
+                                            <option value="allTime" >All Time</option>
+                                        case "year":
+                                            <option value="week" >Last Week</option>
+                                            <option value="month" >Last Month</option>
+                                            <option value="year" selected>Last Year</option>
+                                            <option value="allTime" >All Time</option>
+                                        case "allTime":
+                                            <option value="week" >Last Week</option>
+                                            <option value="month" >Last Month</option>
+                                            <option value="year" >Last Year</option>
+                                            <option value="allTime" selected>All Time</option>
+                                        default:
+                                            <option value="week" >Last Week</option>
+                                    }
+                                </select>
+                            </div>
+                            
+                        </div>
+
+                        
+                        <div class="my-6">
+                            <canvas id="commitDailyChart" width="300" height="300"></canvas>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </body>
+    </html>
+}
+
+
+
+script UserScript(username string , dailyCommitCountList []int ,repoCommitCountList []int, repoNameList []string, dateList []string) {
+    function renderCommitDailyChart(dates, commitCounts) {
+        var ctx = document.getElementById('commitDailyChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Commits',
+                    data: commitCounts,
+                    fill: true,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    tension: 0.5
+                }]
+            },
+            options: {
+                responsive: true, 
+                maintainAspectRatio: false, // Allows you to control the aspect ratio
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function renderRepoCommitChart(repoNames, repoCommitCounts) {
+        var ctx = document.getElementById('repoCommitChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: repoNames,
+                datasets: [{
+                    label: 'Commits per Repo',
+                    data: repoCommitCounts,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false 
+            }
+        });
+    }
+
+    window.onload = function () {
+        
+        renderCommitDailyChart(dateList, dailyCommitCountList);
+        renderRepoCommitChart(repoNameList, repoCommitCountList);
+
+       
+        document.getElementById('viewBy').addEventListener('change', function () {
+            var viewBy = document.getElementById('viewBy').value;
+                var url = `/web/users/${username}?viewBy=${viewBy}`;
+                window.location.href = url;
+                
+        });
+    };
+    
+}

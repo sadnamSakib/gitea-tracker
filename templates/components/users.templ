@@ -1,0 +1,54 @@
+package components
+
+import (
+    "gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
+    "strconv"
+    "fmt"
+)
+
+templ Users(users []model.User) {
+    <!DOCTYPE html>
+    <html lang="en">
+        @Header()
+        <body>
+            <div class="container mx-auto py-10">
+                <h1 class="text-4xl font-bold text-center mb-8">User List</h1>
+
+                <!-- Grid Layout for Users -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+                    
+                    // Loop through the users
+                    for _, user := range users {
+                        <div class="bg-white shadow-md rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer">
+                            
+                            <!-- Avatar Image -->
+                            <div class="flex justify-center mb-4">
+                                <img src={ user.Avatar_url } alt={ fmt.Sprintf("Avatar of %s", user.Username) } class="rounded-full w-24 h-24 object-cover">
+                            </div>
+                            
+                            <!-- Username -->
+                            <div class="text-lg font-semibold text-center mb-2">{ user.Username }</div>
+                            
+                            <!-- Total Commits -->
+                            <div class="text-sm text-gray-700 text-center mb-2">
+                                <strong>Total Commits:</strong>  { strconv.Itoa(user.Total_commits) }
+                            </div>
+                            
+                            <!-- Number of Repositories -->
+                            <div class="text-sm text-gray-700 text-center">
+                                <strong>Repositories:</strong> { strconv.Itoa(len(user.Repos)) }
+                            </div>
+                        </div>
+                    }
+
+                    // If no users available
+                    if len(users) == 0 {
+                        <div class="col-span-full p-4 text-red-500 text-center">
+                            No users found.
+                        </div>
+                    }
+                </div>
+            </div>
+        </body>
+    </html>
+}

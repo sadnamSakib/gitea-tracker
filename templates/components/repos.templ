@@ -1,0 +1,39 @@
+package components
+
+import (
+	
+    "gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
+    
+)
+
+
+templ Repos(repos []model.Repo) {
+    <!DOCTYPE html>
+    <html lang="en">
+        @Header()
+        <body>
+            <div class="container mx-auto py-10">
+                <h1 class="text-4xl font-bold text-center mb-8">Repositories of {repos[0].Owner.FullName}</h1>
+
+                <!-- Grid Layout for Repos -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6
+                ">
+                    // LOOP THROUGH THE REPOS
+                    for _, repo := range repos {
+                        <div class="bg-white shadow-md rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer" data-repo-id={ repo.Name }>
+                            <div class="text-lg font-semibold text-center">{ repo.Name }</div>
+                        </div>
+                    }
+
+                    // IF NO REPOS AVAILABLE
+                    if len(repos) == 0 {
+                        <div class="col-span-full p-4 text-red-500 text-center">
+                            No repos found.
+                        </div>
+                    }
+                </div>
+            </div>
+        </body>
+    </html>
+    
+}

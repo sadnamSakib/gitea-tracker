@@ -10,4 +10,5 @@ func InitRoutes(e *echo.Echo) {
 	InitOrgRoutes(e)
 	InitUserRoutes(e)
 	InitSyncRoutes(e)
+	InitWebRoutes(e)
 }

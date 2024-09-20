@@ -19,6 +19,7 @@ func main() {
 	defer db.Disconnect()
 
 	e := echo.New()
+	e.Static("/web", "web")
 
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "${time_rfc3339} [${method}] ${uri} (${status}) (${latency_human})\n",

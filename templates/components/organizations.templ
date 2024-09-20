@@ -1,0 +1,39 @@
+package components
+
+import (
+	"fmt"
+    "gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
+    
+)
+
+
+templ Organizations(orgs []*model.Org) {
+    <!DOCTYPE html>
+    <html lang="en">
+        @Header() 
+        <body>
+            <div class="container mx-auto py-10">
+                <h1 class="text-4xl font-bold text-center mb-8">Organizations</h1>
+                <ul class="bg-white shadow-md rounded-lg divide-y divide-gray-200 max-w-md mx-auto">
+                    // LOOP THROUGH THE ORGANIZATIONS
+                    for _, org := range orgs {
+                        <li class="p-4 flex items-center space-x-4 cursor-pointer" data-org-id={ org.Username }>
+                            <img class="w-10 h-10 rounded-full" src={ org.AvatarURL } alt={ fmt.Sprintf("Avatar of %s", org.FullName) }>
+                            <div>
+                                <div class="text-lg font-semibold">{ org.FullName }</div>
+                                <div class="text-yellow-500">{ org.Username }</div>
+                            </div>
+                        </li>
+                    }
+                    // IF NO ORGANIZATIONS AVAILABLE
+                    if len(orgs) == 0 {
+                        <li class="p-4 text-red-500">
+                            No organizations found.
+                        </li>
+                    }
+                </ul>
+            </div>
+        </body>
+        @Footer()  
+    </html>
+}
