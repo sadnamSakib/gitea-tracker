@@ -137,27 +137,27 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 		}
 		switch viewBy {
 		case "week":
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<option value=\"week\" selected>Last Week</option> <option value=\"month\">Last Month</option> <option value=\"year\">Last Year</option> <option value=\"allTime\">All Time</option>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<option value=\"week\" selected>This Week</option> <option value=\"month\">This Month</option> <option value=\"year\">This Year</option> <option value=\"allTime\">All Time</option>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		case "month":
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<option value=\"week\">Last Week</option> <option value=\"month\" selected>Last Month</option> <option value=\"year\">Last Year</option> <option value=\"allTime\">All Time</option>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<option value=\"week\">This Week</option> <option value=\"month\" selected>This Month</option> <option value=\"year\">This Year</option> <option value=\"allTime\">All Time</option>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		case "year":
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<option value=\"week\">Last Week</option> <option value=\"month\">Last Month</option> <option value=\"year\" selected>Last Year</option> <option value=\"allTime\">All Time</option>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<option value=\"week\">This Week</option> <option value=\"month\">This Month</option> <option value=\"year\" selected>This Year</option> <option value=\"allTime\">All Time</option>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		case "allTime":
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<option value=\"week\">Last Week</option> <option value=\"month\">Last Month</option> <option value=\"year\">Last Year</option> <option value=\"allTime\" selected>All Time</option>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<option value=\"week\">This Week</option> <option value=\"month\">This Month</option> <option value=\"year\">This Year</option> <option value=\"allTime\" selected>All Time</option>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		default:
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<option value=\"week\">Last Week</option>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<option value=\"week\" selected>This Week</option> <option value=\"month\">This Month</option> <option value=\"year\">This Year</option> <option value=\"allTime\">All Time</option>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -172,8 +172,8 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 
 func UserScript(username string, dailyCommitCountList []int, repoCommitCountList []int, repoNameList []string, dateList []string) templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_UserScript_4c43`,
-		Function: `function __templ_UserScript_4c43(username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList){function renderCommitDailyChart(dates, commitCounts) {
+		Name: `__templ_UserScript_3f5b`,
+		Function: `function __templ_UserScript_3f5b(username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList){function renderCommitDailyChart(dates, commitCounts) {
         var ctx = document.getElementById('commitDailyChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
@@ -235,11 +235,11 @@ func UserScript(username string, dailyCommitCountList []int, repoCommitCountList
     }
 
     window.onload = function () {
-        // Render the initial charts
+        
         renderCommitDailyChart(dateList, dailyCommitCountList);
         renderRepoCommitChart(repoNameList, repoCommitCountList);
 
-        // Add event listener for the filter button
+       
         document.getElementById('viewBy').addEventListener('change', function () {
             var viewBy = document.getElementById('viewBy').value;
                 var url = ` + "`" + `/web/users/${username}?viewBy=${viewBy}` + "`" + `;
@@ -249,8 +249,8 @@ func UserScript(username string, dailyCommitCountList []int, repoCommitCountList
     };
     
 }`,
-		Call:       templ.SafeScript(`__templ_UserScript_4c43`, username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList),
-		CallInline: templ.SafeScriptInline(`__templ_UserScript_4c43`, username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList),
+		Call:       templ.SafeScript(`__templ_UserScript_3f5b`, username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList),
+		CallInline: templ.SafeScriptInline(`__templ_UserScript_3f5b`, username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList),
 	}
 }
 
