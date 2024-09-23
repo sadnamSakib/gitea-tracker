@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"time"
 
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/app/controller"
 	"github.com/robfig/cron/v3"
@@ -43,8 +44,8 @@ func SyncDailyData() {
 }
 
 func InitCronScheduler() *cron.Cron {
-	c := cron.New()
-	c.AddFunc("30 23 * * *", SyncDailyData)
+	c := cron.New(cron.WithLocation(time.Local))
+	c.AddFunc("5 0 * * *", SyncDailyData)
 	c.Start()
 	fmt.Println("Cron Scheduler Initialized")
 	return c

@@ -13,13 +13,14 @@ templ User(user model.User, dailyCommitCountList []int, repoCommitCountList []in
     <html lang="en">
         @Header()
         <body>
+            @Navbar()
             <!-- Include Chart.js from CDN -->
             <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
             
             @UserScript(user.Username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList)
 
-            <div class="container mx-auto py-10"style="min-height:100vh;">
+            <div class="container mx-auto py-10 px-10" style="min-height:100vh;">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                     <div class="col-span-1 bg-white shadow-md rounded-lg p-4">
@@ -37,62 +38,80 @@ templ User(user model.User, dailyCommitCountList []int, repoCommitCountList []in
                         </div>
                         
                         <div class="text-sm text-gray-700 text-center mb-2">
-                            <strong>Total Commits:</strong> {strconv.Itoa(user.Total_commits)}
+                            <strong>Lifetime Commits :</strong> {strconv.Itoa(user.Total_commits)}
                         </div>
 
                        
                         <div class="text-sm text-gray-700 text-center mb-2">
-                            <strong>Repositories:</strong> {strconv.Itoa(len(repoNameList))}
+                            <strong>Repositories Contributed To :</strong> {strconv.Itoa(len(user.Repos))}
                         </div>
-                        <div class="mb-2">
-                            <canvas id="repoCommitChart" width="300" height="300"></canvas>
-                        </div>
+                        
                         
                     </div>
 
                    
                     <div class="col-span-2">
-
-                        <!-- Date Selection and Repo Selection Dropdown -->
-                        <div class="flex justify-end mx-auto">
-                            <div>
-                                <label for="viewBy" >View By:</label>
+                        <div class="flex justify-between items-center mb-4">
+                            <!-- Left section for Commits and Repositories -->
+                            <div class="text-left">
+                                <div class="text-xl font-semibold">
+                                    Commits : <span id="totalCommits">
+                                        { strconv.Itoa(func () int {
+                                            total := 0
+                                            for _, commitCount := range dailyCommitCountList {
+                                                total += commitCount
+                                            }
+                                            return total
+                                        }()) }
+                                    </span>
+                                </div>
+                                <div class="text-xl font-semibold">
+                                    Repositories Worked On : <span id="totalRepos">{strconv.Itoa(len(repoNameList))}</span>
+                                </div>
+                            </div>
+                        
+                            <!-- Right section for View By dropdown -->
+                            <div class="text-right">
+                                <label for="viewBy" class="mr-2">View By:</label>
                                 <select id="viewBy" name="viewBy" class="border p-1">
                                     switch viewBy {
                                         case "week":
                                             <option value="week" selected>This Week</option>
-                                            <option value="month" >This Month</option>
-                                            <option value="year" >This Year</option>
-                                            <option value="allTime" >All Time</option>
+                                            <option value="month">This Month</option>
+                                            <option value="year">This Year</option>
+                                            <option value="allTime">All Time</option>
                                         case "month":
-                                            <option value="week" >This Week</option>
+                                            <option value="week">This Week</option>
                                             <option value="month" selected>This Month</option>
-                                            <option value="year" >This Year</option>
-                                            <option value="allTime" >All Time</option>
+                                            <option value="year">This Year</option>
+                                            <option value="allTime">All Time</option>
                                         case "year":
-                                            <option value="week" >This Week</option>
-                                            <option value="month" >This Month</option>
+                                            <option value="week">This Week</option>
+                                            <option value="month">This Month</option>
                                             <option value="year" selected>This Year</option>
-                                            <option value="allTime" >All Time</option>
+                                            <option value="allTime">All Time</option>
                                         case "allTime":
-                                            <option value="week" >This Week</option>
-                                            <option value="month" >This Month</option>
-                                            <option value="year" >This Year</option>
+                                            <option value="week">This Week</option>
+                                            <option value="month">This Month</option>
+                                            <option value="year">This Year</option>
                                             <option value="allTime" selected>All Time</option>
                                         default:
-                                        <option value="week" selected>This Week</option>
-                                        <option value="month" >This Month</option>
-                                        <option value="year" >This Year</option>
-                                        <option value="allTime" >All Time</option>
+                                            <option value="week" selected>This Week</option>
+                                            <option value="month">This Month</option>
+                                            <option value="year">This Year</option>
+                                            <option value="allTime">All Time</option>
                                     }
                                 </select>
                             </div>
-                            
+                        </div>
+                        
+                        <div class="mb-2" widht="300" height="300">
+                            <canvas id="repoCommitChart" width="250" height="250"></canvas>
                         </div>
 
                         
-                        <div class="my-6">
-                            <canvas id="commitDailyChart" width="300" height="300"></canvas>
+                        <div class="my-6" widht="300" height="300">
+                            <canvas id="commitDailyChart" width="250" height="250"></canvas>
                         </div>
 
                     </div>
@@ -122,9 +141,15 @@ script UserScript(username string , dailyCommitCountList []int ,repoCommitCountL
             options: {
                 responsive: true, 
                 maintainAspectRatio: false, // Allows you to control the aspect ratio
+                aspectRatio: 1,
                 scales: {
                     y: {
                         beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false // This hides the legend
                     }
                 }
             }
@@ -161,9 +186,27 @@ script UserScript(username string , dailyCommitCountList []int ,repoCommitCountL
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false 
+                maintainAspectRatio: false,
+                aspectRatio: 1,
+                layout: {
+                    padding: {
+                        left: 0,
+                        right: 30
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'left',
+                        align: 'start',
+                        labels: {
+                            boxWidth: 20,
+                            padding: 10
+                        }
+                    }
+                }
             }
         });
+        
     }
 
     window.onload = function () {
@@ -174,7 +217,7 @@ script UserScript(username string , dailyCommitCountList []int ,repoCommitCountL
        
         document.getElementById('viewBy').addEventListener('change', function () {
             var viewBy = document.getElementById('viewBy').value;
-                var url = `/web/users/${username}?viewBy=${viewBy}`;
+                var url = `/users/${username}?viewBy=${viewBy}`;
                 window.location.href = url;
                 
         });

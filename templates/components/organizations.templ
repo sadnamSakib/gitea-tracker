@@ -6,12 +6,26 @@ import (
     
 )
 
+script OrgScript() {
+    window.onload = function () {
+        document.querySelectorAll('[data-org-id]').forEach((el) => {
+            el.addEventListener('click', () => {
+                window.location.href = `/orgs/${el.getAttribute('data-org-id')}/repos`;
+            });
+        });
+    };
+    
+}
+
+
 
 templ Organizations(orgs []*model.Org) {
     <!DOCTYPE html>
     <html lang="en">
         @Header() 
         <body>
+            @OrgScript()
+            @Navbar()
             <div class="container mx-auto py-10">
                 <h1 class="text-4xl font-bold text-center mb-8">Organizations</h1>
                 <ul class="bg-white shadow-md rounded-lg divide-y divide-gray-200 max-w-md mx-auto">
@@ -34,6 +48,6 @@ templ Organizations(orgs []*model.Org) {
                 </ul>
             </div>
         </body>
-        @Footer()  
+        
     </html>
 }

@@ -34,30 +34,33 @@ func RenderOrganizations(c echo.Context) error {
 
 	return nil
 }
+func RenderHome(c echo.Context) error {
+
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
+
+	// Create a context and render the component
+	ctx := context.Background() // Using a background context here
+	if err := components.Home().Render(ctx, c.Response().Writer); err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
+}
 func RenderRepos(c echo.Context) error {
-	// Fetch the organizations from the repository
+
 	org := c.Param("org")
 	page := c.QueryParam("page")
 	limit := c.QueryParam("limit")
-	if page == "" {
-		page = "1"
-	}
-	if limit == "" {
-		limit = "10"
-	}
 	repos, err := repository.GetAllReposFromOrg(org, page, limit)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	// Create the Organizations component
-
-	// Set the content type to "text/html"
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
 
 	// Create a context and render the component
 	ctx := context.Background() // Using a background context here
-	if err := components.Repos(repos).Render(ctx, c.Response().Writer); err != nil {
+	if err := components.Repos(repos, org).Render(ctx, c.Response().Writer); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
@@ -68,12 +71,6 @@ func RenderUsers(c echo.Context) error {
 	// Fetch the organizations from the repository
 	page := c.QueryParam("page")
 	limit := c.QueryParam("limit")
-	if page == "" {
-		page = "1"
-	}
-	if limit == "" {
-		limit = "10"
-	}
 	users, err := repository.GetAllUsers(page, limit)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())

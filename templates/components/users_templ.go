@@ -9,10 +9,66 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"fmt"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
-	"strconv"
 )
+
+func UsersScript(users []model.User) templ.ComponentScript {
+	return templ.ComponentScript{
+		Name: `__templ_UsersScript_8e6b`,
+		Function: `function __templ_UsersScript_8e6b(users){function searchUsers() {
+        
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const resultsDiv = document.getElementById('searchResults');
+        console.log(users);
+        if (query.length < 1) {
+            resultsDiv.innerHTML ==''
+            resultsDiv.classList.add('hidden');
+            return;
+        }
+        resultsDiv.innerHTML = '';
+        const filteredUsers = users.filter(user => {
+            return (user.username?.toLowerCase().includes(query) || '') ||
+                   (user.full_name?.toLowerCase().includes(query) || '') ||
+                   (user.email?.toLowerCase().includes(query) || '');
+        });
+        if (filteredUsers.length > 0) {
+            resultsDiv.classList.remove('hidden');
+            // Limit to the top 5 results
+            filteredUsers.slice(0, 6).forEach(user => {
+                const resultItem = ` + "`" + `
+                    <div class="p-2 hover:bg-gray-100 cursor-pointer" data-user-id="${user.username}">
+                        <div class="flex items-center gap-4">
+                            <img src="${user.avatar_url}" alt="Avatar of ${user.username}" class="w-8 h-8 rounded-full">
+                            <div>
+                                <div class="font-semibold">${user.username}</div>
+                                <div class="text-sm text-gray-500">${user.email}</div>
+                            </div>
+                        </div>
+                    </div>
+                ` + "`" + `;
+                resultsDiv.innerHTML += resultItem;
+            });
+
+            document.querySelectorAll('[data-user-id]').forEach((el) => {
+                el.addEventListener('click', () => {
+                    window.location.href = ` + "`" + `/users/${el.getAttribute('data-user-id')}` + "`" + `;
+                });
+            });
+        } else {
+            
+            resultsDiv.innerHTML = 'No matching results';
+        }
+    }
+    window.onload = function () {
+        
+        document.getElementById('searchInput').addEventListener('input', searchUsers);
+    };
+
+}`,
+		Call:       templ.SafeScript(`__templ_UsersScript_8e6b`, users),
+		CallInline: templ.SafeScriptInline(`__templ_UsersScript_8e6b`, users),
+	}
+}
 
 func Users(users []model.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -43,88 +99,19 @@ func Users(users []model.User) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<body><div class=\"container mx-auto py-10\"><h1 class=\"text-4xl font-bold text-center mb-8\">User List</h1><!-- Grid Layout for Users --><div class=\"grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<body>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, user := range users {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"bg-white shadow-md rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer\"><!-- Avatar Image --><div class=\"flex justify-center mb-4\"><img src=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var2 string
-			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(user.Avatar_url)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/users.templ`, Line: 26, Col: 58}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" alt=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Avatar of %s", user.Username))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/users.templ`, Line: 26, Col: 109}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" class=\"rounded-full w-24 h-24 object-cover\"></div><!-- Username --><div class=\"text-lg font-semibold text-center mb-2\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(user.Username)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/users.templ`, Line: 30, Col: 95}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><!-- Total Commits --><div class=\"text-sm text-gray-700 text-center mb-2\"><strong>Total Commits:</strong> ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var5 string
-			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(user.Total_commits))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/users.templ`, Line: 34, Col: 99}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><!-- Number of Repositories --><div class=\"text-sm text-gray-700 text-center\"><strong>Repositories:</strong> ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var6 string
-			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(user.Repos)))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/users.templ`, Line: 39, Col: 94}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
+		templ_7745c5c3_Err = Navbar().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
 		}
-		if len(users) == 0 {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"col-span-full p-4 text-red-500 text-center\">No users found.</div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
+		templ_7745c5c3_Err = UsersScript(users).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div></body></html>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"container mx-auto py-10\"><h1 class=\"text-2xl font-bold text-center mb-8\">Search Users</h1><div class=\"relative px-10\"><input type=\"text\" id=\"searchInput\" class=\"w-full px-4 py-2 border border-gray-300 rounded-lg\" placeholder=\"Search users by username, full name, or email...\"><!-- Results Container --><div id=\"searchResults\" class=\"z-10 mx-auto w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden\"></div></div></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

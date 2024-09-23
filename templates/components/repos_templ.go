@@ -12,7 +12,65 @@ import (
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
 )
 
-func Repos(repos []model.Repo) templ.Component {
+func ReposScript(repos []model.Repo, org string) templ.ComponentScript {
+	return templ.ComponentScript{
+		Name: `__templ_ReposScript_8982`,
+		Function: `function __templ_ReposScript_8982(repos, org){function searchRepos() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const resultsDiv = document.getElementById('searchResults');
+
+        // If query is empty, clear results and hide the container
+        if (query.length < 1) {
+            resultsDiv.innerHTML = '';
+            resultsDiv.classList.add('hidden');
+            return;
+        }
+
+        // Clear previous results
+        resultsDiv.innerHTML = '';
+
+        // Filter the repositories based on the search query
+        const filteredRepos = repos.filter(repo => {
+            return (repo.name?.toLowerCase().includes(query) || '');
+        });
+
+        // If there are matching repositories, display them
+        if (filteredRepos.length > 0) {
+            resultsDiv.classList.remove('hidden');
+
+            // Limit to the top 5 results
+            filteredRepos.slice(0, 6).forEach(repo => {
+                const resultItem = ` + "`" + `
+                    <div class="p-2 hover:bg-gray-100 cursor-pointer" data-repo-id="${repo.name}">
+                        <div class="flex items-center gap-4">
+                            <div class="font-semibold">${repo.name}</div>
+                        </div>
+                    </div>
+                ` + "`" + `;
+                resultsDiv.innerHTML += resultItem;
+            });
+
+            // Attach click event listeners to dynamically generated items
+            document.querySelectorAll('[data-repo-id]').forEach((el) => {
+                el.addEventListener('click', () => {
+                    window.location.href = ` + "`" + `/orgs/${org}/repos/${el.getAttribute('data-repo-id')}` + "`" + `;
+                });
+            });
+        } else {
+            resultsDiv.innerHTML = '<div class="p-2 text-gray-500 text-center">No matching repositories</div>';
+        }
+    }
+
+    window.onload = function () {
+        document.getElementById('searchInput').addEventListener('input', searchRepos);
+    };
+}`,
+		Call:       templ.SafeScript(`__templ_ReposScript_8982`, repos, org),
+		CallInline: templ.SafeScriptInline(`__templ_ReposScript_8982`, repos, org),
+	}
+}
+
+func Repos(repos []model.Repo, org string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -41,62 +99,19 @@ func Repos(repos []model.Repo) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<body><div class=\"container mx-auto py-10\"><h1 class=\"text-4xl font-bold text-center mb-8\">Repositories of ")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<body>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(repos[0].Owner.FullName)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repos.templ`, Line: 16, Col: 104}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+		templ_7745c5c3_Err = Navbar().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h1><!-- Grid Layout for Repos --><div class=\"grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6\r\n                \">")
+		templ_7745c5c3_Err = ReposScript(repos, org).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, repo := range repos {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"bg-white shadow-md rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer\" data-repo-id=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(repo.Name)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repos.templ`, Line: 23, Col: 144}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><div class=\"text-lg font-semibold text-center\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(repo.Name)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repos.templ`, Line: 24, Col: 86}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		if len(repos) == 0 {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"col-span-full p-4 text-red-500 text-center\">No repos found.</div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div></body></html>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"container mx-auto py-10\"><h1 class=\"text-2xl font-bold text-center mb-8\">Search Repositories</h1><!-- Search Input --><div class=\"relative px-10\"><input type=\"text\" id=\"searchInput\" class=\"w-full px-4 py-2 border border-gray-300 rounded-lg\" placeholder=\"Search repositories by name...\"><!-- Results Container --><div id=\"searchResults\" class=\"z-10 mx-auto w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden\"><!-- Search results will be dynamically injected here --></div></div></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

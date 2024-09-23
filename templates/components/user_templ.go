@@ -45,7 +45,15 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<body><!-- Include Chart.js from CDN --><script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<body>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = Navbar().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Include Chart.js from CDN --><script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -53,14 +61,14 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"container mx-auto py-10\" style=\"min-height:100vh;\"><div class=\"grid grid-cols-1 md:grid-cols-3 gap-6\"><div class=\"col-span-1 bg-white shadow-md rounded-lg p-4\"><div class=\"flex justify-center mb-4\"><img src=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"container mx-auto py-10 px-10\" style=\"min-height:100vh;\"><div class=\"grid grid-cols-1 md:grid-cols-3 gap-6\"><div class=\"col-span-1 bg-white shadow-md rounded-lg p-4\"><div class=\"flex justify-center mb-4\"><img src=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(user.Avatar_url)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 28, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 29, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -73,7 +81,7 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Avatar of %s", user.Username))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 28, Col: 102}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 29, Col: 102}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -86,7 +94,7 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(user.Username)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 32, Col: 90}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 33, Col: 90}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -99,39 +107,71 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(user.Email)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 36, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 37, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"text-sm text-gray-700 text-center mb-2\"><strong>Total Commits:</strong> ")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"text-sm text-gray-700 text-center mb-2\"><strong>Lifetime Commits :</strong> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(user.Total_commits))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 40, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 41, Col: 97}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"text-sm text-gray-700 text-center mb-2\"><strong>Repositories:</strong> ")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"text-sm text-gray-700 text-center mb-2\"><strong>Repositories Contributed To :</strong> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(repoNameList)))
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(user.Repos)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 45, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 46, Col: 105}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"mb-2\"><canvas id=\"repoCommitChart\" width=\"300\" height=\"300\"></canvas></div></div><div class=\"col-span-2\"><!-- Date Selection and Repo Selection Dropdown --><div class=\"flex justify-end mx-auto\"><div><label for=\"viewBy\">View By:</label> <select id=\"viewBy\" name=\"viewBy\" class=\"border p-1\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div><div class=\"col-span-2\"><div class=\"flex justify-between items-center mb-4\"><!-- Left section for Commits and Repositories --><div class=\"text-left\"><div class=\"text-xl font-semibold\">Commits : <span id=\"totalCommits\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var8 string
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(func() int {
+			total := 0
+			for _, commitCount := range dailyCommitCountList {
+				total += commitCount
+			}
+			return total
+		}()))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 65, Col: 44}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span></div><div class=\"text-xl font-semibold\">Repositories Worked On : <span id=\"totalRepos\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var9 string
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(repoNameList)))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 69, Col: 115}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span></div></div><!-- Right section for View By dropdown --><div class=\"text-right\"><label for=\"viewBy\" class=\"mr-2\">View By:</label> <select id=\"viewBy\" name=\"viewBy\" class=\"border p-1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -162,7 +202,7 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</select></div></div><div class=\"my-6\"><canvas id=\"commitDailyChart\" width=\"300\" height=\"300\"></canvas></div></div></div></div></body></html>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</select></div></div><div class=\"mb-2\" widht=\"300\" height=\"300\"><canvas id=\"repoCommitChart\" width=\"250\" height=\"250\"></canvas></div><div class=\"my-6\" widht=\"300\" height=\"300\"><canvas id=\"commitDailyChart\" width=\"250\" height=\"250\"></canvas></div></div></div></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -172,8 +212,8 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 
 func UserScript(username string, dailyCommitCountList []int, repoCommitCountList []int, repoNameList []string, dateList []string) templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_UserScript_3f5b`,
-		Function: `function __templ_UserScript_3f5b(username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList){function renderCommitDailyChart(dates, commitCounts) {
+		Name: `__templ_UserScript_5630`,
+		Function: `function __templ_UserScript_5630(username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList){function renderCommitDailyChart(dates, commitCounts) {
         var ctx = document.getElementById('commitDailyChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
@@ -190,9 +230,15 @@ func UserScript(username string, dailyCommitCountList []int, repoCommitCountList
             options: {
                 responsive: true, 
                 maintainAspectRatio: false, // Allows you to control the aspect ratio
+                aspectRatio: 1,
                 scales: {
                     y: {
                         beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false // This hides the legend
                     }
                 }
             }
@@ -229,9 +275,27 @@ func UserScript(username string, dailyCommitCountList []int, repoCommitCountList
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false 
+                maintainAspectRatio: false,
+                aspectRatio: 1,
+                layout: {
+                    padding: {
+                        left: 0,
+                        right: 30
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'left',
+                        align: 'start',
+                        labels: {
+                            boxWidth: 20,
+                            padding: 10
+                        }
+                    }
+                }
             }
         });
+        
     }
 
     window.onload = function () {
@@ -242,15 +306,15 @@ func UserScript(username string, dailyCommitCountList []int, repoCommitCountList
        
         document.getElementById('viewBy').addEventListener('change', function () {
             var viewBy = document.getElementById('viewBy').value;
-                var url = ` + "`" + `/web/users/${username}?viewBy=${viewBy}` + "`" + `;
+                var url = ` + "`" + `/users/${username}?viewBy=${viewBy}` + "`" + `;
                 window.location.href = url;
                 
         });
     };
     
 }`,
-		Call:       templ.SafeScript(`__templ_UserScript_3f5b`, username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList),
-		CallInline: templ.SafeScriptInline(`__templ_UserScript_3f5b`, username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList),
+		Call:       templ.SafeScript(`__templ_UserScript_5630`, username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList),
+		CallInline: templ.SafeScriptInline(`__templ_UserScript_5630`, username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList),
 	}
 }
 
