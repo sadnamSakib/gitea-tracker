@@ -157,6 +157,79 @@ func RenderUser(c echo.Context) error {
 	return nil
 }
 
+func RenderRepo(c echo.Context) error {
+	org := c.Param("org")
+	repo := c.Param("repo")
+	repoUsers, err := repository.SearchUsersOfRepo(org, repo, "", "", "")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	repoObj, err := repository.GetRepo(org, repo)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	var startDate string
+	var endDate string
+	viewBy := c.QueryParam("viewBy")
+	if viewBy == "" {
+		viewBy = "week"
+	}
+	now := time.Now()
+
+	if viewBy == "week" {
+		weekday := int(now.Weekday())
+		if weekday == 0 {
+			weekday = 7
+		}
+		lastMonday := now.AddDate(0, 0, -weekday+1)
+		startDate = lastMonday.Format("2006-01-02")
+		endDate = now.Format("2006-01-02")
+
+	} else if viewBy == "month" {
+
+		startDate = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+		endDate = now.Format("2006-01-02")
+	} else if viewBy == "year" {
+
+		startDate = time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+		endDate = now.Format("2006-01-02")
+	} else {
+
+		startDate = repoObj.Created.Format("2006-01-02")
+		endDate = now.Format("2006-01-02")
+	}
+
+	userActivities := [][]model.Activity{}
+	for _, user := range repoUsers {
+		activities, err := repository.GetUserActivityByDateRange(user.Username, startDate, endDate, repo)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+		userActivities = append(userActivities, activities)
+	}
+
+	var wg sync.WaitGroup
+	dailyCommitCountListForAllUsers := make([][]int, 0)
+	dateListForAllUsers := make([]string, 0)
+
+	for _, activities := range userActivities {
+		wg.Add(1)
+		commitCounts, dates := GetCommitCountWithDateList(activities, &wg, startDate, endDate, viewBy)
+		wg.Wait()
+		dailyCommitCountListForAllUsers = append(dailyCommitCountListForAllUsers, commitCounts)
+		dateListForAllUsers = dates
+	}
+
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
+	ctx := context.Background()
+
+	if err := components.Repo(org, repoObj, repoUsers, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy).Render(ctx, c.Response().Writer); err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return nil
+}
+
 func GetCommitCountWithDateList(activities []model.Activity, wg *sync.WaitGroup, startDate, endDate, viewBy string) ([]int, []string) {
 	defer wg.Done()
 	dates := make([]string, 0)

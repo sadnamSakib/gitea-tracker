@@ -13,5 +13,6 @@ func InitWebRoutes(e *echo.Echo) {
 	webGroup.GET("/orgs/:org/repos", controller.RenderRepos)
 	webGroup.GET("/users", controller.RenderUsers)
 	webGroup.GET("/users/:user", controller.RenderUser)
+	webGroup.GET("/orgs/:org/repos/:repo", controller.RenderRepo)
 
 }

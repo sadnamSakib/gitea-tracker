@@ -321,16 +321,16 @@ func DailySync(c echo.Context) error {
 	}
 	fmt.Println("Repos Synchronised")
 
-	usersHeatmap, err := SyncAllHeatmaps()
-	if err != nil {
+	// usersHeatmap, err := SyncAllHeatmaps()
+	// if err != nil {
 
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
+	// 	return c.JSON(http.StatusInternalServerError, err.Error())
+	// }
 	usersNewActivities, err := SyncDailyActivities()
 	if err != nil {
 
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	fmt.Println("Daily Activities Synchronised")
-	return c.JSON(http.StatusOK, map[string]int{"Organizations Synced": orgs, "Users Synced": users, "Repos Synced For Organizations": orgsRepo, "Heatmaps Synced For Users": usersHeatmap, "New Activities Synced For Users": usersNewActivities})
+	return c.JSON(http.StatusOK, map[string]int{"Organizations Synced": orgs, "Users Synced": users, "Repos Synced For Organizations": orgsRepo, "New Activities Synced For Users": usersNewActivities})
 }

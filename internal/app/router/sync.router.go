@@ -6,7 +6,7 @@ import (
 )
 
 // InitAuthRoutes sets up the routes for authentication
-func InitSyncRoutes(e *echo.Echo) {
+func InitSyncRoutes(e *echo.Group) {
 	syncGroup := e.Group("/sync")
 	syncGroup.GET("/orgs", controller.SyncOrganizations)
 	syncGroup.GET("/users", controller.SyncUsers)
