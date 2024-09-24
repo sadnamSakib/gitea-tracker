@@ -35,12 +35,30 @@ func RenderOrganizations(c echo.Context) error {
 	return nil
 }
 func RenderHome(c echo.Context) error {
+	systemSummary, err := repository.GetSystemSummary()
+	var orgs int
+	var repos int
+	var users int
+	var last_updated time.Time
+	var is_synced bool
+	if err != nil {
+		orgs = 0
+		repos = 0
+		users = 0
+		last_updated = time.Now()
+		is_synced = true
+	} else {
+		orgs = systemSummary.Total_orgs
+		repos = systemSummary.Total_repos
+		users = systemSummary.Total_users
+		last_updated = systemSummary.Last_synced
+		is_synced = systemSummary.Is_synced
+	}
 
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
 
-	// Create a context and render the component
-	ctx := context.Background() // Using a background context here
-	if err := components.Home().Render(ctx, c.Response().Writer); err != nil {
+	ctx := context.Background()
+	if err := components.Home(orgs, repos, users, last_updated, is_synced).Render(ctx, c.Response().Writer); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 

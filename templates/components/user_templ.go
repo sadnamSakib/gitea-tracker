@@ -61,7 +61,7 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"container mx-auto py-10 px-10\" style=\"min-height:100vh;\"><div class=\"grid grid-cols-1 md:grid-cols-3 gap-6\"><div class=\"col-span-1 bg-white shadow-md rounded-lg p-4\"><div class=\"flex justify-center mb-4\"><img src=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"container mx-auto py-10 px-10\"><div class=\"grid grid-cols-1 md:grid-cols-3 gap-6\"><div class=\"col-span-1 bg-white shadow-md rounded-lg p-4\"><div class=\"flex justify-center mb-4\"><img src=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -139,7 +139,7 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div><div class=\"col-span-2\"><div class=\"flex justify-end\"><button type=\"button\" class=\"bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded inline-flex items-center\"><svg class=\"w-4 h-4 mr-2\" xmlns=\"http://www.w3.org/2000/svg\" height=\"14\" width=\"12.25\" viewBox=\"0 0 448 512\"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path fill=\"#FFD43B\" d=\"M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z\"></path></svg> <a href=\"/users\">Back To Search</a></button></div><div class=\"flex justify-between items-center mb-4\"><!-- Left section for Commits and Repositories --><div class=\"text-left\"><div class=\"text-xl font-semibold\">Commits : <span id=\"totalCommits\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div><div class=\"col-span-2\"><div class=\"flex justify-end mb-2\"><button type=\"button\" class=\"bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded inline-flex items-center\"><svg class=\"w-4 h-4 mr-2\" xmlns=\"http://www.w3.org/2000/svg\" height=\"14\" width=\"12.25\" viewBox=\"0 0 448 512\"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path fill=\"#FFD43B\" d=\"M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z\"></path></svg> <a href=\"/users\">Back To Search</a></button></div><div class=\"flex justify-between items-center mb-4\"><!-- Left section for Commits and Repositories --><div class=\"text-left\"><div class=\"text-xl font-semibold\">Commits : <span id=\"totalCommits\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -152,7 +152,7 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 			return total
 		}()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 71, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 70, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -165,7 +165,7 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(repoNameList)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 75, Col: 115}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 74, Col: 115}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -202,7 +202,7 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</select></div></div><div class=\"mb-2\" widht=\"300\" height=\"300\"><canvas id=\"repoCommitChart\" width=\"250\" height=\"250\"></canvas></div><div class=\"my-6\" widht=\"300\" height=\"300\"><canvas id=\"commitDailyChart\" width=\"250\" height=\"250\"></canvas></div></div></div></div></body></html>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</select></div></div><div class=\"mb-2\" widht=\"250\" height=\"250\"><canvas id=\"repoCommitChart\" width=\"200\" height=\"200\"></canvas></div><div class=\"my-6\" widht=\"250\" height=\"250\"><canvas id=\"commitDailyChart\" width=\"200\" height=\"200\"></canvas></div></div></div></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

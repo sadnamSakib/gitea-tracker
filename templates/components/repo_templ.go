@@ -59,7 +59,7 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"container mx-auto py-10 px-10\" style=\"min-height:100vh;\"><div class=\"grid grid-cols-1 md:grid-cols-3 gap-6\"><div class=\"col-span-1 bg-white shadow-md rounded-lg px-4 py-2\"><div class=\"text-3xl text-gray-700 text-center mb-2\"><strong>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"container mx-auto py-10 px-10\"><div class=\"grid grid-cols-1 md:grid-cols-3 gap-6\"><div class=\"col-span-1 bg-white shadow-md rounded-lg px-4 py-2\"><div class=\"text-3xl text-gray-700 text-center mb-2\"><strong>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -72,7 +72,7 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</strong></div><div class=\"text-sm text-gray-700 text-center mb-2\"><strong>Created At :</strong> ")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</strong></div><div class=\"text-sm text-gray-700 text-center mb-2\"><strong>Created On :</strong> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -89,7 +89,7 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, user := range users {
+		for i, user := range users {
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"bg-white shadow-md rounded-lg p-4 m-1 hover:shadow-lg transition-shadow cursor-pointer flex flex-wrap items-center\" data-user-id=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -116,29 +116,48 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" alt=\"Avatar of { user.Username }\" class=\"rounded-full w-12 h-12 object-cover\"></div><!-- Username and Email --><div><!-- Username --><div class=\"text-lg font-semibold\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" alt=\"Avatar of { user.Username }\" class=\"rounded-full w-12 h-12 object-cover\"></div><!-- Username and Email --><div><div class=\"text-lg font-semibold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(user.Username)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 47, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 46, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><!-- User Email --><div class=\"text-sm text-gray-600\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><!-- User Email --><div class=\"text-sm \">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(user.Email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 50, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 48, Col: 74}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div><!-- Commits Count (Placeholder) --><div class=\"ml-auto text-right\"><div class=\"text-sm font-semibold\">Commits: ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var8 string
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(func() string {
+				total := 0
+				for _, commitCount := range dailyCommitCountListForAllUsers[i] {
+					total += commitCount
+				}
+				return strconv.Itoa(total)
+			}())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 59, Col: 47}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -153,37 +172,16 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div><div class=\"col-span-2\"><div class=\"flex justify-end\"><button type=\"button\" class=\"bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded inline-flex items-center\"><svg class=\"w-4 h-4 mr-2\" xmlns=\"http://www.w3.org/2000/svg\" height=\"14\" width=\"12.25\" viewBox=\"0 0 448 512\"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path fill=\"#FFD43B\" d=\"M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z\"></path></svg> <a href=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div><div class=\"col-span-2\"><div class=\"flex justify-end mb-2\"><button type=\"button\" class=\"bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded inline-flex items-center\"><svg class=\"w-4 h-4 mr-2\" xmlns=\"http://www.w3.org/2000/svg\" height=\"14\" width=\"12.25\" viewBox=\"0 0 448 512\"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path fill=\"#FFD43B\" d=\"M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z\"></path></svg> <a href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var8 templ.SafeURL = templ.SafeURL(fmt.Sprintf("/orgs/%s/repos", org))
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(string(templ_7745c5c3_Var8)))
+		var templ_7745c5c3_Var9 templ.SafeURL = templ.SafeURL(fmt.Sprintf("/orgs/%s/repos", org))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(string(templ_7745c5c3_Var9)))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\">Back To Search</a></button></div><div class=\"flex justify-between items-center mb-4\"><div class=\"text-left\"><div class=\"text-xl font-semibold\">Selected User : <span id=\"selectedUser\">All</span></div><div class=\"text-xl font-semibold\">Commits : <span id=\"totalCommits\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(func() int {
-			total := 0
-			for _, commitCountList := range dailyCommitCountListForAllUsers {
-				for _, commitCount := range commitCountList {
-					total += commitCount
-				}
-			}
-			return total
-		}()))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 92, Col: 44}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span></div></div><!-- Right section for View By dropdown --><div class=\"text-right\"><label for=\"viewBy\" class=\"mr-2\">View By:</label> <select id=\"viewBy\" name=\"viewBy\" class=\"border p-1\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\">Back To Search</a></button></div><div class=\"flex justify-end items-center mb-4\"><!-- Right section for View By dropdown --><div class=\"text-right\"><label for=\"viewBy\" class=\"mr-2\">View By:</label> <select id=\"viewBy\" name=\"viewBy\" class=\"border p-1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -214,7 +212,28 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</select></div></div><div class=\"mb-2\" widht=\"300\" height=\"300\"><canvas id=\"repoCommitChart\" width=\"250\" height=\"250\"></canvas></div><div class=\"my-6\" widht=\"300\" height=\"300\"><canvas id=\"commitDailyChart\" width=\"250\" height=\"250\"></canvas></div></div></div></div></body></html>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</select></div></div><div class=\"mb-2\" widht=\"250\" height=\"250\"><canvas id=\"repoCommitChart\" width=\"200\" height=\"200\"></canvas></div><div class=\"text-left\"><div class=\"text-xl font-semibold\">Selected User : <span id=\"selectedUser\">All</span></div><div class=\"text-xl font-semibold\">Commits : <span id=\"totalCommits\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var10 string
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(func() int {
+			total := 0
+			for _, commitCountList := range dailyCommitCountListForAllUsers {
+				for _, commitCount := range commitCountList {
+					total += commitCount
+				}
+			}
+			return total
+		}()))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 140, Col: 40}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span></div></div><div class=\"my-6\" widht=\"250\" height=\"250\"><canvas id=\"commitDailyChart\" width=\"200\" height=\"200\"></canvas></div></div></div></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -224,9 +243,10 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 
 func RepoScript(org string, repo model.Repo, users []model.User, dailyCommitCountListForAllUsers [][]int, dateListForAllUsers []string, viewBy string) templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_RepoScript_f90c`,
-		Function: `function __templ_RepoScript_f90c(org, repo, users, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy){var lineChart = null;
+		Name: `__templ_RepoScript_b36e`,
+		Function: `function __templ_RepoScript_b36e(org, repo, users, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy){var lineChart = null;
     var piChart = null;
+    var selectedUserId =null;
     function renderCommitDailyChart(dates, commitCounts) {
 
         if (lineChart) {
@@ -322,6 +342,7 @@ func RepoScript(org string, repo model.Repo, users []model.User, dailyCommitCoun
     window.onload = function () {
         console.log(dailyCommitCountListForAllUsers);
         console.log(dateListForAllUsers);
+
         var aggregatedCommitCount = [];
         for (var i = 0; i < dateListForAllUsers.length; i++) {
             var total = 0;
@@ -330,7 +351,10 @@ func RepoScript(org string, repo model.Repo, users []model.User, dailyCommitCoun
             }
             aggregatedCommitCount.push(total);
         }
+
+        // Render the initial aggregated chart for all users
         renderCommitDailyChart(dateListForAllUsers, aggregatedCommitCount);
+
         var aggregatedCommitCountListForUsers = [];
         for (var i = 0; i < users.length; i++) {
             var total = 0;
@@ -340,39 +364,64 @@ func RepoScript(org string, repo model.Repo, users []model.User, dailyCommitCoun
             aggregatedCommitCountListForUsers.push(total);
         }
         renderRepoCommitChart(users.map(user => user.username), aggregatedCommitCountListForUsers);
-             
-        document.getElementById('viewBy').addEventListener('change', function () {
-            var viewBy = document.getElementById('viewBy').value;
-                var url = ` + "`" + `/orgs/${org}/repos/${repo.name}?viewBy=${viewBy}` + "`" + `;
-                window.location.href = url;  
-        });
+
         document.querySelectorAll('[data-user-id]').forEach((el) => {
             el.addEventListener('click', () => {
+                const clickedUserId = el.getAttribute('data-user-id');
                 
-                const clickedUsername = el.getAttribute('data-user-id');
-                
-                const index = users.findIndex(user => user.username === clickedUsername);
-        
-                if (index !== -1) { // If user is found
-                    console.log('Selected User:', users[index].Username);
+                // If the same user is clicked again, revert to aggregated commits
+                if (selectedUserId === clickedUserId) {
+                    // Reset selected user
+                    selectedUserId = null;
                     
-                    // Get the commit counts for the clicked user
-                    const userCommitCounts = dailyCommitCountListForAllUsers[index];
+                   
+                    el.style.backgroundColor = 'white';
+                    el.style.color = 'black';
                     
-                    document.getElementById('selectedUser').innerText = clickedUsername;
-                    document.getElementById('totalCommits').innerText = userCommitCounts.reduce((a, b) => a + b, 0);
-                    renderCommitDailyChart(dateListForAllUsers, userCommitCounts);
+                    // Reset to the aggregated commit chart
+                    document.getElementById('selectedUser').innerText = "All";
+                    document.getElementById('totalCommits').innerText = aggregatedCommitCount.reduce((a, b) => a + b, 0);
+                    renderCommitDailyChart(dateListForAllUsers, aggregatedCommitCount);
                 } else {
-                    console.error('User not found');
+                    // Highlight the selected card
+                    document.querySelectorAll('[data-user-id]').forEach(card => {
+                        card.style.backgroundColor = 'white';
+                        card.style.color = 'black';
+                    });
+                    el.style.backgroundColor = 'blue';
+                    el.style.color = 'white';
+                    
+                    selectedUserId = clickedUserId;
+
+                    // Get the commit counts for the clicked user
+                    const index = users.findIndex(user => user.username === clickedUserId);
+
+                    if (index !== -1) {
+                        console.log('Selected User:', users[index].Username);
+
+                        // Get the commit counts for the clicked user
+                        const userCommitCounts = dailyCommitCountListForAllUsers[index];
+
+                        document.getElementById('selectedUser').innerText = clickedUserId;
+                        document.getElementById('totalCommits').innerText = userCommitCounts.reduce((a, b) => a + b, 0);
+                        renderCommitDailyChart(dateListForAllUsers, userCommitCounts);
+                    } else {
+                        console.error('User not found');
+                    }
                 }
             });
         });
-        
+
+        document.getElementById('viewBy').addEventListener('change', function () {
+            var viewBy = document.getElementById('viewBy').value;
+            var url = ` + "`" + `/orgs/${org}/repos/${repo.name}?viewBy=${viewBy}` + "`" + `;
+            window.location.href = url;  
+        });
     };
     
 }`,
-		Call:       templ.SafeScript(`__templ_RepoScript_f90c`, org, repo, users, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy),
-		CallInline: templ.SafeScriptInline(`__templ_RepoScript_f90c`, org, repo, users, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy),
+		Call:       templ.SafeScript(`__templ_RepoScript_b36e`, org, repo, users, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy),
+		CallInline: templ.SafeScriptInline(`__templ_RepoScript_b36e`, org, repo, users, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy),
 	}
 }
 
