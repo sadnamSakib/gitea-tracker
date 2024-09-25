@@ -2,17 +2,42 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 
+	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/config"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/db"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const orgCollection = "orgs"
-const repoCollection = "repos"
+func ClearOrgs() error {
+	collection := db.MongoDatabase.Collection(orgCollection)
+	err := collection.Drop(context.Background())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func SyncOrgsWithDB(orgs []model.Org) error {
+
+	collection := db.MongoDatabase.Collection(orgCollection)
+
+	documents := make([]interface{}, len(orgs))
+	for i, org := range orgs {
+		documents[i] = org
+	}
+
+	_, err := collection.InsertMany(context.Background(), documents)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func GetAllOrgs() ([]*model.Org, error) {
 	orgs := make([]*model.Org, 0)
@@ -33,6 +58,39 @@ func GetAllOrgs() ([]*model.Org, error) {
 	}
 	return orgs, nil
 
+}
+func FetchOrgsFromGitea(page int) ([]model.Org, error) {
+	orgs := make([]model.Org, 0)
+	url := fmt.Sprintf("%s/orgs?page=%d&access_token=%s", config.AppConfig.GITEA.Base_URL, page, config.AppConfig.GITEA.API_KEY)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return orgs, fmt.Errorf("failed to create HTTP request: %w", err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return orgs, fmt.Errorf("failed to make HTTP request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return orgs, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&orgs); err != nil {
+		return orgs, fmt.Errorf("failed to decode JSON response: %w", err)
+	}
+
+	if len(orgs) == 0 {
+		return []model.Org{}, nil
+	}
+	next_orgs, err := FetchOrgsFromGitea(page + 1)
+	if err != nil {
+		return orgs, err
+	}
+	orgs = append(orgs, next_orgs...)
+	return orgs, nil
 }
 
 func GetAllReposFromOrg(orgName, page, limit string) ([]model.Repo, error) {

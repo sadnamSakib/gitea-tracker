@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 
+	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/app/service"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/repository"
 
 	"github.com/labstack/echo/v4"
@@ -56,11 +57,10 @@ func SearchUsers(c echo.Context) error {
 
 }
 
-func GetUserHeatmap(c echo.Context) error {
-	userName := c.Param("username")
-	heatmaps, err := repository.GetUserHeatmap(userName)
+func SyncUsers(c echo.Context) error {
+	usersSynced, err := service.SyncAllUsers()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, heatmaps)
+	return c.JSON(http.StatusOK, map[string]int{"Users": usersSynced})
 }
