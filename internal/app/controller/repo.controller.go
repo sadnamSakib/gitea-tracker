@@ -42,6 +42,24 @@ func GetAllUsersOfRepo(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, users)
 }
+func FollowRepo(c echo.Context) error {
+	org := c.Param("org")
+	repo := c.Param("repo")
+	err := repository.FollowRepo(org, repo)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "Repo Followed")
+}
+func UnfollowRepo(c echo.Context) error {
+	org := c.Param("org")
+	repo := c.Param("repo")
+	err := repository.UnfollowRepo(org, repo)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "Repo Unfollowed")
+}
 
 func SearchRepos(c echo.Context) error {
 	org := c.Param("org")

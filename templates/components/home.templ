@@ -21,7 +21,7 @@ script DashboardScript(){
             const progressCounter = document.getElementById('progress-counter'); // For "Completed X/4"
             syncingSection.classList.remove('hidden');
             let completedSteps = 0;
-            const totalSteps = 4;
+            const totalSteps = 5;
             let startTime;
 
             const socket = new WebSocket('ws://localhost:8080/api/sync/dailySync');
@@ -42,6 +42,9 @@ script DashboardScript(){
                     completedSteps++;
                 } else if (message.includes('New Activities Synced')) {
                     document.getElementById('step-activities').innerHTML = completedIcon(); // Update to green checkmark
+                    completedSteps++;
+                } else if (message.includes('Repo Activities Synced')) {
+                    document.getElementById('step-repo-activities').innerHTML = completedIcon(); // Update to green checkmark
                     completedSteps++;
                 }
 
@@ -193,8 +196,14 @@ templ Home(orgs int,repos int,users int, last_sync time.Time,is_synced bool){
                                             </svg></span> 
                                     </div>
                                     <div class="flex justify-between items-center">
-                                        <span>Activities</span>
+                                        <span>User Activities</span>
                                         <span id="step-activities"><svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <circle cx="12" cy="12" r="10" stroke-width="2" />
+                                            </svg></span> 
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>Repository Activities</span>
+                                        <span id="step-repo-activities"><svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <circle cx="12" cy="12" r="10" stroke-width="2" />
                                             </svg></span> 
                                     </div>

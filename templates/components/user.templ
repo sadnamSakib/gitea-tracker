@@ -18,35 +18,37 @@ templ User(user model.User, dailyCommitCountList []int, repoCommitCountList []in
             <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
             
-            @UserScript(user.Username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList)
+            @UserScript(user.Username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList, user.Following)
 
             <div class="container mx-auto py-10 px-10" >
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                     <div class="col-span-1 bg-white shadow-md rounded-lg p-4">
-                       
                         <div class="flex justify-center mb-4">
                             <img src={user.Avatar_url} alt={fmt.Sprintf("Avatar of %s", user.Username)} class="rounded-full w-32 h-32 object-cover">
                         </div>
-
-                        
-                        <div class="text-lg font-semibold text-center mb-2">{user.Username}</div>
-
-                      
+                    
+                        <div class="text-lg font-semibold text-center mb-2 flex justify-center items-center">
+                            {user.Username}
+                            <button id="followButton" class="ml-2 px-2 py-1 text-sm rounded-md font-medium">
+                                <!-- The button text will be handled in the script -->
+                            </button>
+                            
+                        </div>
+                    
                         <div class="text-sm text-gray-700 text-center mb-2">
                             <strong>Email:</strong> {user.Email}
                         </div>
-                        
+                    
                         <div class="text-sm text-gray-700 text-center mb-2">
-                            <strong>Lifetime Commits :</strong> {strconv.Itoa(user.Total_commits)}
+                            <strong>Lifetime Commits :</strong> {strconv.Itoa(user.Aggregated_Commits.All_Time)}
                         </div>
-
-                       
+                    
                         <div class="text-sm text-gray-700 text-center mb-2">
                             <strong>Repositories Contributed To :</strong> {strconv.Itoa(len(user.Repos))}
                         </div>
-                        
                     </div>
+                    
 
                    
                     <div class="col-span-2">
@@ -127,8 +129,68 @@ templ User(user model.User, dailyCommitCountList []int, repoCommitCountList []in
 }
 
 
+script UserScript(username string, dailyCommitCountList []int, repoCommitCountList []int, repoNameList []string, dateList []string, following bool) {
+    
+    async function toggleFollow() {
+        const followButton = document.getElementById('followButton');
 
-script UserScript(username string , dailyCommitCountList []int ,repoCommitCountList []int, repoNameList []string, dateList []string) {
+        // Set the initial state of the button based on the following attribute
+        if (following) {
+            followButton.innerText = 'Following';
+            followButton.classList.add('following');
+        } else {
+            followButton.innerText = 'Follow';
+            followButton.classList.add('follow');
+        }
+
+        // Add click event to toggle between follow/unfollow
+        followButton.addEventListener('click', async function () {
+            if (followButton.innerText === 'Follow') {
+                // Call the follow API
+                const followResponse = await fetch(`/api/users/${username}/follow`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (followResponse.ok) {
+                    // Change to 'Following'
+                    followButton.innerText = 'Following';
+                    followButton.classList.remove('follow');
+                    followButton.classList.add('following');
+
+                    // Update following status
+                    following = true;
+                    console.log(`Now following ${username}`);
+                } else {
+                    console.error('Failed to follow user.');
+                }
+            } else {
+                // Call the unfollow API
+                const unfollowResponse = await fetch(`/api/users/${username}/unfollow`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (unfollowResponse.ok) {
+                    // Change to 'Follow'
+                    followButton.innerText = 'Follow';
+                    followButton.classList.remove('following');
+                    followButton.classList.add('follow');
+
+                    // Update following status
+                    following = false;
+                    console.log(`Unfollowed ${username}`);
+                } else {
+                    console.error('Failed to unfollow user.');
+                }
+            }
+        });
+    }
+
     function renderCommitDailyChart(dates, commitCounts) {
         var ctx = document.getElementById('commitDailyChart').getContext('2d');
         new Chart(ctx, {
@@ -145,7 +207,7 @@ script UserScript(username string , dailyCommitCountList []int ,repoCommitCountL
             },
             options: {
                 responsive: true, 
-                maintainAspectRatio: false, // Allows you to control the aspect ratio
+                maintainAspectRatio: false, 
                 aspectRatio: 1,
                 scales: {
                     y: {
@@ -154,7 +216,7 @@ script UserScript(username string , dailyCommitCountList []int ,repoCommitCountL
                 },
                 plugins: {
                     legend: {
-                        display: false // This hides the legend
+                        display: false
                     }
                 }
             }
@@ -211,21 +273,20 @@ script UserScript(username string , dailyCommitCountList []int ,repoCommitCountL
                 }
             }
         });
-        
     }
 
     window.onload = function () {
-        
         renderCommitDailyChart(dateList, dailyCommitCountList);
         renderRepoCommitChart(repoNameList, repoCommitCountList);
+        toggleFollow();
 
-       
         document.getElementById('viewBy').addEventListener('change', function () {
             var viewBy = document.getElementById('viewBy').value;
-                var url = `/users/${username}?viewBy=${viewBy}`;
-                window.location.href = url;
-                
+            var url = `/users/${username}?viewBy=${viewBy}`;
+            window.location.href = url;
         });
     };
-    
 }
+
+
+

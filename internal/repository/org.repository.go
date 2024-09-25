@@ -139,6 +139,35 @@ func GetRepo(orgName, repoName string) (model.Repo, error) {
 	return repo, nil
 }
 
+func FollowRepo(orgName, repoName string) error {
+	collection := db.MongoDatabase.Collection(repoCollection)
+	filter := bson.M{"owner.username": orgName, "name": repoName}
+	update := bson.M{
+		"$set": bson.M{
+			"following": true,
+		},
+	}
+	_, err := collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func UnfollowRepo(orgName, repoName string) error {
+	collection := db.MongoDatabase.Collection(repoCollection)
+	filter := bson.M{"owner.username": orgName, "name": repoName}
+	update := bson.M{
+		"$set": bson.M{
+			"following": false,
+		},
+	}
+	_, err := collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func GetAllUsersFromRepo(org, repo, page, limit string) ([]model.User, error) {
 
 	collection := db.MongoDatabase.Collection("users")

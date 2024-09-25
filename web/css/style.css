@@ -10,3 +10,17 @@
 .animate-spin {
   animation: spin 1s linear infinite;
 }
+.follow {
+  background-color: #3490dc; /* Blue color */
+  color: white;
+}
+
+.following {
+  background-color: #38c172; /* Green color */
+  color: white;
+}
+
+.follow:hover,
+.following:hover {
+  opacity: 0.8;
+}

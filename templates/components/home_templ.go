@@ -15,8 +15,8 @@ import (
 
 func DashboardScript() templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_DashboardScript_5aee`,
-		Function: `function __templ_DashboardScript_5aee(){function completedIcon() {
+		Name: `__templ_DashboardScript_da44`,
+		Function: `function __templ_DashboardScript_da44(){function completedIcon() {
         return ` + "`" + `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>` + "`" + `;
@@ -32,7 +32,7 @@ func DashboardScript() templ.ComponentScript {
             const progressCounter = document.getElementById('progress-counter'); // For "Completed X/4"
             syncingSection.classList.remove('hidden');
             let completedSteps = 0;
-            const totalSteps = 4;
+            const totalSteps = 5;
             let startTime;
 
             const socket = new WebSocket('ws://localhost:8080/api/sync/dailySync');
@@ -53,6 +53,9 @@ func DashboardScript() templ.ComponentScript {
                     completedSteps++;
                 } else if (message.includes('New Activities Synced')) {
                     document.getElementById('step-activities').innerHTML = completedIcon(); // Update to green checkmark
+                    completedSteps++;
+                } else if (message.includes('Repo Activities Synced')) {
+                    document.getElementById('step-repo-activities').innerHTML = completedIcon(); // Update to green checkmark
                     completedSteps++;
                 }
 
@@ -94,8 +97,8 @@ func DashboardScript() templ.ComponentScript {
         });
     }
 }`,
-		Call:       templ.SafeScript(`__templ_DashboardScript_5aee`),
-		CallInline: templ.SafeScriptInline(`__templ_DashboardScript_5aee`),
+		Call:       templ.SafeScript(`__templ_DashboardScript_da44`),
+		CallInline: templ.SafeScriptInline(`__templ_DashboardScript_da44`),
 	}
 }
 
@@ -155,7 +158,7 @@ func Home(orgs int, repos int, users int, last_sync time.Time, is_synced bool) t
 			return localTime.Format("2006-01-02 03:04:05 PM")
 		}())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/home.templ`, Line: 108, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/home.templ`, Line: 111, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -168,7 +171,7 @@ func Home(orgs int, repos int, users int, last_sync time.Time, is_synced bool) t
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(orgs))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/home.templ`, Line: 122, Col: 84}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/home.templ`, Line: 125, Col: 84}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -181,7 +184,7 @@ func Home(orgs int, repos int, users int, last_sync time.Time, is_synced bool) t
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(repos))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/home.templ`, Line: 135, Col: 85}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/home.templ`, Line: 138, Col: 85}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -194,7 +197,7 @@ func Home(orgs int, repos int, users int, last_sync time.Time, is_synced bool) t
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(users))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/home.templ`, Line: 148, Col: 85}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/home.templ`, Line: 151, Col: 85}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -215,7 +218,7 @@ func Home(orgs int, repos int, users int, last_sync time.Time, is_synced bool) t
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"syncing-section\" class=\"hidden\"><div id=\"progress-counter\" class=\"text-gray-700 font-semibold\">Completed 0/4</div><div id=\"sync-messages\" class=\"w-full bg-gray-100 rounded p-2 text-gray-800\"><div class=\"flex justify-between items-center\"><span>Organizations</span> <span id=\"step-org\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"w-6 h-6 text-gray-500\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><circle cx=\"12\" cy=\"12\" r=\"10\" stroke-width=\"2\"></circle></svg></span></div><div class=\"flex justify-between items-center\"><span>Users</span> <span id=\"step-users\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"w-6 h-6 text-gray-500\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><circle cx=\"12\" cy=\"12\" r=\"10\" stroke-width=\"2\"></circle></svg></span></div><div class=\"flex justify-between items-center\"><span>Repositories</span> <span id=\"step-repos\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"w-6 h-6 text-gray-500\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><circle cx=\"12\" cy=\"12\" r=\"10\" stroke-width=\"2\"></circle></svg></span></div><div class=\"flex justify-between items-center\"><span>Activities</span> <span id=\"step-activities\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"w-6 h-6 text-gray-500\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><circle cx=\"12\" cy=\"12\" r=\"10\" stroke-width=\"2\"></circle></svg></span></div></div></div></div></div></div></body></html>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"syncing-section\" class=\"hidden\"><div id=\"progress-counter\" class=\"text-gray-700 font-semibold\">Completed 0/4</div><div id=\"sync-messages\" class=\"w-full bg-gray-100 rounded p-2 text-gray-800\"><div class=\"flex justify-between items-center\"><span>Organizations</span> <span id=\"step-org\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"w-6 h-6 text-gray-500\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><circle cx=\"12\" cy=\"12\" r=\"10\" stroke-width=\"2\"></circle></svg></span></div><div class=\"flex justify-between items-center\"><span>Users</span> <span id=\"step-users\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"w-6 h-6 text-gray-500\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><circle cx=\"12\" cy=\"12\" r=\"10\" stroke-width=\"2\"></circle></svg></span></div><div class=\"flex justify-between items-center\"><span>Repositories</span> <span id=\"step-repos\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"w-6 h-6 text-gray-500\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><circle cx=\"12\" cy=\"12\" r=\"10\" stroke-width=\"2\"></circle></svg></span></div><div class=\"flex justify-between items-center\"><span>User Activities</span> <span id=\"step-activities\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"w-6 h-6 text-gray-500\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><circle cx=\"12\" cy=\"12\" r=\"10\" stroke-width=\"2\"></circle></svg></span></div><div class=\"flex justify-between items-center\"><span>Repository Activities</span> <span id=\"step-repo-activities\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"w-6 h-6 text-gray-500\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><circle cx=\"12\" cy=\"12\" r=\"10\" stroke-width=\"2\"></circle></svg></span></div></div></div></div></div></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -17,6 +17,22 @@ func GetUser(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, user)
 }
+func FollowUser(c echo.Context) error {
+	userName := c.Param("username")
+	err := repository.FollowUser(userName)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "User Followed")
+}
+func UnfollowUser(c echo.Context) error {
+	userName := c.Param("username")
+	err := repository.UnfollowUser(userName)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "User Unfollowed")
+}
 
 func GetUserActivityByDateRange(c echo.Context) error {
 	userName := c.Param("username")

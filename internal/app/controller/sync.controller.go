@@ -69,9 +69,15 @@ func DailySync(c echo.Context) error {
 		ws.WriteMessage(websocket.TextMessage, []byte("Error syncing daily activities: "+err.Error()))
 
 	}
-	elapsedTime := int64(time.Since(startTime).Seconds())
 	fmt.Println("Daily Activities Synchronised")
 	ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("New Activities Synced For Users: %d", usersNewActivities)))
+	repoActivitiesSynced, err := service.SyncAllNewRepoActivities()
+	if err != nil {
+		ws.WriteMessage(websocket.TextMessage, []byte("Error syncing repo activities: "+err.Error()))
+	}
+	fmt.Println("Repo Activities Synchronised")
+	ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Repo Activities Synced: %d", repoActivitiesSynced)))
+	elapsedTime := int64(time.Since(startTime).Seconds())
 	err = repository.SyncSystemSummary(orgs, repos, users, time.Now().Local(), elapsedTime)
 	if err != nil {
 		ws.WriteMessage(websocket.TextMessage, []byte("Error syncing system summary: "+err.Error()))

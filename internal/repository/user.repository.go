@@ -23,6 +23,38 @@ func ClearUsers() error {
 	}
 	return nil
 }
+func FollowUser(userName string) error {
+	collection := db.MongoDatabase.Collection(userCollection)
+	filter := bson.M{"username": userName}
+	update := bson.M{
+		"$set": bson.M{
+			"following": true,
+		},
+	}
+	opts := options.Update().SetUpsert(true)
+	_, err := collection.UpdateOne(context.Background(), filter, update, opts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func UnfollowUser(userName string) error {
+	collection := db.MongoDatabase.Collection(userCollection)
+	filter := bson.M{"username": userName}
+	update := bson.M{
+		"$set": bson.M{
+			"following": false,
+		},
+	}
+	opts := options.Update().SetUpsert(true)
+	_, err := collection.UpdateOne(context.Background(), filter, update, opts)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
 
 func GetAllUsers(page, limit string) ([]model.User, error) {
 	users := make([]model.User, 0)

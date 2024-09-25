@@ -44,6 +44,12 @@ func TotalSync() {
 		return
 	}
 	fmt.Println("Daily Activities Synchronised")
+	_, err = SyncAllRepoActivities()
+	if err != nil {
+		fmt.Printf("Error syncing repo activities: %v\n", err)
+		return
+	}
+	fmt.Println("Repo Activities Synchronised")
 
 	elapsedTime := int64(time.Since(startTime).Seconds())
 
@@ -100,6 +106,12 @@ func SyncDailyData() {
 		return
 	}
 	fmt.Println("Daily Activities Synchronised")
+	_, err = SyncAllNewRepoActivities()
+	if err != nil {
+		fmt.Printf("Error syncing repo activities: %v\n", err)
+		return
+	}
+	fmt.Println("Repo Activities Synchronised")
 
 	elapsedTime := int64(time.Since(startTime).Seconds())
 

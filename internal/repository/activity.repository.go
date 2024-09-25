@@ -155,7 +155,6 @@ func SyncActivitiesWithDB(username string, activities []model.Activity) error {
 	update := bson.M{
 		"$set": bson.M{
 			"last_updated":                  lastUpdateTime,
-			"total_commits":                 len(activities),
 			"repos":                         repoList,
 			"aggregated_commits.last_week":  weeklyCommits,
 			"aggregated_commits.last_month": monthlyCommits,
