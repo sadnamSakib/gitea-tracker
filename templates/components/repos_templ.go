@@ -14,8 +14,8 @@ import (
 
 func ReposScript(repos []model.Repo, org string) templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_ReposScript_8982`,
-		Function: `function __templ_ReposScript_8982(repos, org){function searchRepos() {
+		Name: `__templ_ReposScript_ee20`,
+		Function: `function __templ_ReposScript_ee20(repos, org){function searchRepos() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         const resultsDiv = document.getElementById('searchResults');
 
@@ -60,13 +60,41 @@ func ReposScript(repos []model.Repo, org string) templ.ComponentScript {
             resultsDiv.innerHTML = '<div class="p-2 text-gray-500 text-center">No matching repositories</div>';
         }
     }
+    function displaySortedRepos() {
+        const repoListDiv = document.getElementById('repoList');
+
+        // Sort the repos by Updated_at in descending order
+        const sortedRepos = repos.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+        // Limit to the top 20 repositories
+        sortedRepos.slice(0, 20).forEach(repo => {
+            const repoItem = ` + "`" + `
+            <div class="p-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 cursor-pointer" data-repo-id="${repo.name}">
+                <div class="flex flex-col items-start">
+                    <div class="font-semibold">${repo.name}</div>
+                    <div class="text-gray-500 text-sm">Last Activity: ${new Date(repo.updated_at).toLocaleDateString()}</div>
+                </div>
+            </div>
+            
+            ` + "`" + `;
+            repoListDiv.innerHTML += repoItem;
+        });
+
+        // Attach click event listeners to dynamically generated items
+        document.querySelectorAll('[data-repo-id]').forEach((el) => {
+            el.addEventListener('click', () => {
+                window.location.href = ` + "`" + `/orgs/${org}/repos/${el.getAttribute('data-repo-id')}` + "`" + `;
+            });
+        });
+    }
 
     window.onload = function () {
         document.getElementById('searchInput').addEventListener('input', searchRepos);
+        displaySortedRepos();
     };
 }`,
-		Call:       templ.SafeScript(`__templ_ReposScript_8982`, repos, org),
-		CallInline: templ.SafeScriptInline(`__templ_ReposScript_8982`, repos, org),
+		Call:       templ.SafeScript(`__templ_ReposScript_ee20`, repos, org),
+		CallInline: templ.SafeScriptInline(`__templ_ReposScript_ee20`, repos, org),
 	}
 }
 
@@ -111,7 +139,7 @@ func Repos(repos []model.Repo, org string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"container mx-auto py-10\"><h1 class=\"text-2xl font-bold text-center mb-8\">Search Repositories</h1><!-- Search Input --><div class=\"relative px-10\"><input type=\"text\" id=\"searchInput\" class=\"w-full px-4 py-2 border border-gray-300 rounded-lg\" placeholder=\"Search repositories by name...\"><!-- Results Container --><div id=\"searchResults\" class=\"z-10 mx-auto w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden\"><!-- Search results will be dynamically injected here --></div></div></div></body></html>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"container mx-auto py-10\"><h1 class=\"text-2xl font-bold text-center mb-8\">Search Repositories</h1><!-- Search Input --><div class=\"relative px-10 mb-4\"><input type=\"text\" id=\"searchInput\" class=\"w-full px-4 py-2 border border-gray-300 rounded-lg\" placeholder=\"Search repositories by name...\"><!-- Results Container --><div id=\"searchResults\" class=\"z-10 mx-auto  w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden\"><!-- Search results will be dynamically injected here --></div></div><div id=\"repoList\" class=\"mt-8 px-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6\"><!-- The top 20 repositories sorted by Updated_at will be displayed here as cards --></div></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

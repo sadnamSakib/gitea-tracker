@@ -284,12 +284,25 @@ func SyncActivitiesWithDB(username string, activities []model.Activity) error {
 	}
 
 	lastUpdateTime := time.Now().UTC()
+	now := time.Now()
+	weekday := int(now.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	lastMonday := now.AddDate(0, 0, -weekday+1).Format("2006-01-02")
+	lastMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+	lastYear := time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+	weeklyCommits, monthlyCommits, yearlyCommits, allTimeCommits := AggregateUserCommits(lastMonday, lastMonth, lastYear, activities)
 
 	update := bson.M{
 		"$set": bson.M{
-			"last_updated":  lastUpdateTime,
-			"total_commits": len(activities),
-			"repos":         repoList,
+			"last_updated":                  lastUpdateTime,
+			"total_commits":                 len(activities),
+			"repos":                         repoList,
+			"aggregated_commits.last_week":  weeklyCommits,
+			"aggregated_commits.last_month": monthlyCommits,
+			"aggregated_commits.last_year":  yearlyCommits,
+			"aggregated_commits.all_time":   allTimeCommits,
 		},
 	}
 
@@ -395,14 +408,28 @@ func SyncNewActivitiesWithDB(username string, activities []model.Activity) error
 		repoList = append(repoList, repo)
 	}
 	fmt.Println("Total repos : ", len(reposSet), " for user ", username)
+	lastUpdateTime := time.Now().UTC()
+	now := time.Now()
+	weekday := int(now.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	lastMonday := now.AddDate(0, 0, -weekday+1).Format("2006-01-02")
+	lastMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+	lastYear := time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+	weeklyCommits, monthlyCommits, yearlyCommits, allTimeCommits := AggregateUserCommits(lastMonday, lastMonth, lastYear, activities)
 
 	update := bson.M{
 		"$set": bson.M{
-			"last_updated": time.Now().UTC(),
+			"last_updated": lastUpdateTime,
 			"repos":        repoList,
 		},
 		"$inc": bson.M{
-			"total_commits": len(activities),
+			"total_commits":                 len(activities),
+			"aggregated_commits.last_week":  weeklyCommits,
+			"aggregated_commits.last_month": monthlyCommits,
+			"aggregated_commits.last_year":  yearlyCommits,
+			"aggregated_commits.all_time":   allTimeCommits,
 		},
 	}
 
@@ -545,4 +572,26 @@ func ClearActivities() error {
 		return err
 	}
 	return nil
+}
+
+func AggregateUserCommits(lastMonday, LastMonth, LastYear string, activities []model.Activity) (int, int, int, int) {
+	var weekly int
+	var monthly int
+	var yearly int
+	var allTime int
+	for _, activity := range activities {
+		date := activity.Date.Format("2006-01-02")
+		if date >= lastMonday {
+			weekly++
+		}
+		if date >= LastMonth {
+			monthly++
+		}
+		if date >= LastYear {
+			yearly++
+		}
+		allTime++
+
+	}
+	return weekly, monthly, yearly, allTime
 }

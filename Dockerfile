@@ -17,5 +17,4 @@ RUN go build -o main cmd/gitea-committer/main.go
 
 EXPOSE 8080
 
-# Command to run the Go application
 CMD ["./main"]

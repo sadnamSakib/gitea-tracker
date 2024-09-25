@@ -115,17 +115,16 @@ func SyncAllActivities() (int, error) {
 		return 0, err
 	}
 
-	// Clear activities before starting the sync
 	err = repository.ClearActivities()
 	if err != nil {
 		return 0, err
 	}
 
 	wg := sync.WaitGroup{}
-	sem := make(chan struct{}, 10)             // Semaphore to limit concurrency
-	errorsChan := make(chan error, len(users)) // Buffered error channel
+	sem := make(chan struct{}, 10)
+	errorsChan := make(chan error, len(users))
 	userSynced := 0
-	mu := sync.Mutex{} // Mutex to safely update shared counter
+	mu := sync.Mutex{}
 
 	for _, user := range users {
 
@@ -134,12 +133,10 @@ func SyncAllActivities() (int, error) {
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
-
-			// Sync user activities and capture errors
 			if err := SyncUserActivities(user.Username); err != nil {
 				errorsChan <- err
 			} else {
-				// Safely increment userSynced
+
 				mu.Lock()
 				userSynced++
 				mu.Unlock()
@@ -147,11 +144,10 @@ func SyncAllActivities() (int, error) {
 		}(user)
 	}
 
-	wg.Wait()         // Wait for all goroutines to finish
-	close(errorsChan) // Close the error channel after all processing is complete
-	close(sem)        // Close the semaphore channel
+	wg.Wait()
+	close(errorsChan)
+	close(sem)
 
-	// Handle errors after syncing
 	for e := range errorsChan {
 		err = e
 		fmt.Println(err)
@@ -223,35 +219,31 @@ func SyncAllRepos() (int, error) {
 	}
 
 	wg := sync.WaitGroup{}
-	sem := make(chan struct{}, 10) // Semaphore to limit concurrency
+	sem := make(chan struct{}, 10)
 	errorsChan := make(chan error, len(orgs))
-	repoCount := make(chan int, len(orgs)) // Buffered channel to avoid blocking on count
+	repoCount := make(chan int, len(orgs))
 	totalRepos := 0
 
 	for _, org := range orgs {
 		wg.Add(1)
-		// Goroutine to sync repos for each org concurrently
-		go func(org *model.Org) {
-			defer wg.Done()   // Mark the goroutine as done when finished
-			sem <- struct{}{} // Acquire a spot in the semaphore
 
-			// SyncOrgRepos handles repo syncing, and any error is returned to errorsChan
+		go func(org *model.Org) {
+			defer wg.Done()
+			sem <- struct{}{}
+
 			if err := SyncOrgRepos(org.Username, sem, repoCount); err != nil {
 				errorsChan <- err
 			}
 
-			<-sem // Release the semaphore spot
+			<-sem
 		}(org)
 	}
 
-	// Wait for all goroutines to finish
 	wg.Wait()
 
-	// Close channels after all processing is complete
-	close(repoCount) // Close repoCount after all repos are synced
+	close(repoCount)
 	close(errorsChan)
 
-	// Check for any errors that occurred during syncing
 	for e := range errorsChan {
 		err = e
 		fmt.Println(err)
@@ -302,38 +294,35 @@ func SyncDailyActivities() (int, error) {
 	}
 
 	wg := sync.WaitGroup{}
-	sem := make(chan struct{}, 10)             // Semaphore to limit concurrency
-	errorsChan := make(chan error, len(users)) // Buffered to avoid blocking
+	sem := make(chan struct{}, 10)
+	errorsChan := make(chan error, len(users))
 	usersSynced := 0
-	mu := sync.Mutex{} // Mutex to safely update shared counter
+	mu := sync.Mutex{}
 
 	for _, user := range users {
 		wg.Add(1)
 
-		// Run each sync operation in a separate goroutine
 		go func(user model.User) {
-			defer wg.Done()   // Ensure we call Done even if there's an error
-			sem <- struct{}{} // Acquire a spot in the semaphore
+			defer wg.Done()
+			sem <- struct{}{}
 
-			// SyncNewUserActivities and handle errors
 			if err := SyncNewUserActivities(user.Username, sem); err != nil {
 				errorsChan <- err
 			} else {
-				// Safely increment the usersSynced counter
+
 				mu.Lock()
 				usersSynced++
 				mu.Unlock()
 			}
 
-			<-sem // Release the semaphore spot
+			<-sem
 		}(user)
 	}
 
-	wg.Wait()         // Wait for all goroutines to finish
-	close(errorsChan) // Close the error channel after all work is done
-	close(sem)        // Close the semaphore when done
+	wg.Wait()
+	close(errorsChan)
+	close(sem)
 
-	// Process any errors that were reported
 	for e := range errorsChan {
 		err = e
 		fmt.Println(err)
