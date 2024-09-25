@@ -74,3 +74,135 @@ func SyncAllRepos() (int, error) {
 
 	return totalRepos, err
 }
+
+func SyncRepoActivities(repoName string) error {
+	activities, err := repository.GetRepoActivityByDateRange(repoName, "", "")
+	if err != nil {
+		return err
+	}
+
+	err = repository.SyncRepoActivitiesWithDB(repoName, activities)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func SyncAllRepoActivities() (int, error) {
+	orgs, err := repository.GetAllOrgs()
+	if err != nil {
+		return 0, err
+	}
+	var repos []model.Repo
+	for _, org := range orgs {
+		repo, err := repository.GetAllReposFromOrg(org.Username, "", "")
+		if err != nil {
+			return 0, err
+		}
+		repos = append(repos, repo...)
+	}
+
+	wg := sync.WaitGroup{}
+	sem := make(chan struct{}, goRoutines)
+	errorsChan := make(chan error, len(repos))
+	repoSynced := 0
+	mu := sync.Mutex{}
+
+	for _, repo := range repos {
+		wg.Add(1)
+
+		go func(repo model.Repo) {
+			defer wg.Done()
+			sem <- struct{}{}
+
+			if err := SyncRepoActivities(repo.Name); err != nil {
+				errorsChan <- err
+			} else {
+				mu.Lock()
+				repoSynced++
+				mu.Unlock()
+			}
+
+			<-sem
+		}(repo)
+	}
+
+	wg.Wait()
+
+	close(errorsChan)
+	close(sem)
+
+	for e := range errorsChan {
+		err = e
+		fmt.Println(err)
+	}
+
+	return repoSynced, err
+}
+
+func SyncNewRepoActivities(repoName string) error {
+	activities, err := repository.GetNewRepoActivity(repoName)
+	if err != nil {
+		return err
+	}
+
+	err = repository.SyncNewRepoActivitiesWithDB(repoName, activities)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func SyncAllNewRepoActivities() (int, error) {
+	orgs, err := repository.GetAllOrgs()
+	if err != nil {
+		return 0, err
+	}
+	var repos []model.Repo
+	for _, org := range orgs {
+		repo, err := repository.GetAllReposFromOrg(org.Username, "", "")
+		if err != nil {
+			return 0, err
+		}
+		repos = append(repos, repo...)
+	}
+
+	wg := sync.WaitGroup{}
+	sem := make(chan struct{}, goRoutines)
+	errorsChan := make(chan error, len(repos))
+	repoSynced := 0
+	mu := sync.Mutex{}
+
+	for _, repo := range repos {
+		wg.Add(1)
+
+		go func(repo model.Repo) {
+			defer wg.Done()
+			sem <- struct{}{}
+
+			if err := SyncRepoActivities(repo.Name); err != nil {
+				errorsChan <- err
+			} else {
+				mu.Lock()
+				repoSynced++
+				mu.Unlock()
+			}
+
+			<-sem
+		}(repo)
+	}
+
+	wg.Wait()
+
+	close(errorsChan)
+	close(sem)
+
+	for e := range errorsChan {
+		err = e
+		fmt.Println(err)
+	}
+
+	return repoSynced, err
+}

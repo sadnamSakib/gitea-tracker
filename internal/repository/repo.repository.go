@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/config"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/db"
@@ -119,4 +120,162 @@ func SyncReposWithDB(repos []model.Repo) error {
 	}
 
 	return nil
+}
+func GetRepoActivityByDateRange(repoName string, start_date_str string, end_date_str string) ([]model.Activity, error) {
+	collection := db.MongoDatabase.Collection(activitesCollection)
+	layout := "2006-01-02"
+
+	filter := bson.M{
+		"repo.name": repoName,
+	}
+
+	if start_date_str != "" {
+		start_date, err := time.Parse(layout, start_date_str)
+		if err != nil {
+			return nil, fmt.Errorf("invalid start date format: %v", err)
+		}
+		filter["date"] = bson.M{"$gte": start_date}
+	}
+
+	if end_date_str != "" {
+		end_date, err := time.Parse(layout, end_date_str)
+		if err != nil {
+			return nil, fmt.Errorf("invalid end date format: %v", err)
+		}
+
+		end_date = end_date.Add(24*time.Hour - time.Nanosecond)
+		if _, exists := filter["date"]; exists {
+			filter["date"].(bson.M)["$lte"] = end_date
+		} else {
+			filter["date"] = bson.M{"$lte": end_date}
+		}
+	}
+
+	cursor, err := collection.Find(context.Background(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	var activities []model.Activity
+	for cursor.Next(context.Background()) {
+		var activity model.Activity
+		if err := cursor.Decode(&activity); err != nil {
+			return nil, err
+		}
+		activities = append(activities, activity)
+	}
+
+	return activities, nil
+}
+func SyncRepoActivitiesWithDB(repoName string, activities []model.Activity) error {
+
+	if len(activities) == 0 {
+
+		return nil
+	}
+
+	collection := db.MongoDatabase.Collection(repoCollection)
+	filter := bson.M{"name": repoName}
+
+	now := time.Now()
+	weekday := int(now.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	lastMonday := now.AddDate(0, 0, -weekday+1).Format("2006-01-02")
+	lastMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+	lastYear := time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+
+	weeklyCommits, monthlyCommits, yearlyCommits, allTimeCommits := AggregateCommits(lastMonday, lastMonth, lastYear, activities)
+
+	update := bson.M{
+		"$set": bson.M{
+			"aggregated_commits.last_week":  weeklyCommits,
+			"aggregated_commits.last_month": monthlyCommits,
+			"aggregated_commits.last_year":  yearlyCommits,
+			"aggregated_commits.all_time":   allTimeCommits,
+		},
+	}
+
+	_, err := collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func SyncNewRepoActivitiesWithDB(repoName string, activities []model.Activity) error {
+
+	if len(activities) == 0 {
+
+		return nil
+	}
+
+	collection := db.MongoDatabase.Collection(repoCollection)
+	filter := bson.M{"name": repoName}
+
+	var repo model.Repo
+	err := collection.FindOne(context.Background(), filter).Decode(&repo)
+	if err != nil {
+		return err
+	}
+
+	now := time.Now()
+	weekday := int(now.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	lastMonday := now.AddDate(0, 0, -weekday+1).Format("2006-01-02")
+	lastMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+	lastYear := time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+
+	weeklyCommits, monthlyCommits, yearlyCommits, allTimeCommits := AggregateCommits(lastMonday, lastMonth, lastYear, activities)
+
+	update := bson.M{
+		"$inc": bson.M{
+			"aggregated_commits.last_week":  weeklyCommits,
+			"aggregated_commits.last_month": monthlyCommits,
+			"aggregated_commits.last_year":  yearlyCommits,
+			"aggregated_commits.all_time":   allTimeCommits,
+		},
+	}
+
+	_, err = collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetNewRepoActivity(repo string) ([]model.Activity, error) {
+	collection := db.MongoDatabase.Collection(systemCollection)
+	system := collection.FindOne(context.Background(), bson.M{"name": "system"})
+	if system.Err() != nil {
+		return nil, system.Err()
+	}
+	var systemDoc model.SystemSummary
+	err := system.Decode(&systemDoc)
+	if err != nil {
+		return nil, err
+	}
+	lastSync := systemDoc.Last_synced
+	collection = db.MongoDatabase.Collection(activitesCollection)
+	filter := bson.M{"name": repo, "date": bson.M{"$gt": lastSync}}
+	cursor, err := collection.Find(context.Background(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+	var activities []model.Activity
+	for cursor.Next(context.Background()) {
+		var activity model.Activity
+		if err := cursor.Decode(&activity); err != nil {
+			return nil, err
+		}
+		activities = append(activities, activity)
+	}
+	return activities, nil
+
 }

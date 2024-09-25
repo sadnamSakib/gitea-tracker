@@ -14,6 +14,7 @@ func SyncUserActivities(userName string) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("Activities fetched for", userName, ":", len(activities))
 	err = repository.SyncActivitiesWithDB(userName, activities)
 	if err != nil {
 		return err

@@ -18,7 +18,7 @@ var (
 	client = &http.Client{}
 )
 
-func AggregateUserCommits(lastMonday, LastMonth, LastYear string, activities []model.Activity) (int, int, int, int) {
+func AggregateCommits(lastMonday, LastMonth, LastYear string, activities []model.Activity) (int, int, int, int) {
 	var weekly int
 	var monthly int
 	var yearly int

@@ -150,7 +150,7 @@ func SyncActivitiesWithDB(username string, activities []model.Activity) error {
 	lastMonday := now.AddDate(0, 0, -weekday+1).Format("2006-01-02")
 	lastMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
 	lastYear := time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
-	weeklyCommits, monthlyCommits, yearlyCommits, allTimeCommits := AggregateUserCommits(lastMonday, lastMonth, lastYear, activities)
+	weeklyCommits, monthlyCommits, yearlyCommits, allTimeCommits := AggregateCommits(lastMonday, lastMonth, lastYear, activities)
 
 	update := bson.M{
 		"$set": bson.M{
