@@ -106,6 +106,8 @@ func SearchUsers(query, page, limit string) ([]model.User, error) {
 
 func GetUserActivityByDateRange(userName string, start_date_str string, end_date_str string, repo string) ([]model.Activity, error) {
 	collection := db.MongoDatabase.Collection(activitesCollection)
+	fmt.Println(start_date_str)
+	fmt.Println(end_date_str)
 	layout := "2006-01-02"
 	filter := bson.M{
 		"performedby.username": userName,

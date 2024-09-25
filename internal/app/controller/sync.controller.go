@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/repository"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
+	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )
 
@@ -92,9 +94,8 @@ func SyncHeatMaps(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]int{"User's Heatmaps": users})
 }
 
-func SyncUserActivities(userName string, wg *sync.WaitGroup, sem chan struct{}) error {
-	defer wg.Done()
-	defer func() { <-sem }()
+func SyncUserActivities(userName string) error {
+
 	activities, err := repository.FetchUserActivityFromGitea(1, userName)
 	if err != nil {
 		return err
@@ -113,6 +114,7 @@ func SyncAllActivities() (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	err = repository.ClearActivities()
 	if err != nil {
 		return 0, err
@@ -122,26 +124,37 @@ func SyncAllActivities() (int, error) {
 	sem := make(chan struct{}, 10)
 	errorsChan := make(chan error, len(users))
 	userSynced := 0
+	mu := sync.Mutex{}
+
 	for _, user := range users {
+
 		wg.Add(1)
-		sem <- struct{}{}
+		go func(user model.User) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+			if err := SyncUserActivities(user.Username); err != nil {
+				errorsChan <- err
+			} else {
 
-		if err := SyncUserActivities(user.Username, &wg, sem); err != nil {
-			errorsChan <- err
-		} else {
-			userSynced++
-		}
-
+				mu.Lock()
+				userSynced++
+				mu.Unlock()
+			}
+		}(user)
 	}
+
 	wg.Wait()
 	close(errorsChan)
 	close(sem)
+
 	for e := range errorsChan {
 		err = e
 		fmt.Println(err)
 	}
 
-	return len(users), err
+	fmt.Println("Synced", userSynced, "users")
+	return userSynced, err
 }
 
 func SyncActivities(c echo.Context) error {
@@ -178,9 +191,7 @@ func SyncOrganizations(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]int{"Organizations": orgsSynced})
 }
 
-func SyncOrgRepos(orgName string, wg *sync.WaitGroup, sem chan struct{}) error {
-	defer wg.Done()
-	defer func() { <-sem }()
+func SyncOrgRepos(orgName string, sem chan struct{}, repoCount chan int) error {
 
 	repos, err := repository.FetchRepoOfOrgFromGitea(1, orgName)
 	if err != nil {
@@ -191,41 +202,62 @@ func SyncOrgRepos(orgName string, wg *sync.WaitGroup, sem chan struct{}) error {
 	if err != nil {
 		return err
 	}
+	repoCount <- len(repos)
 	fmt.Printf("Synced %d repositories of %s\n", len(repos), orgName)
-
 	return nil
 }
-
 func SyncAllRepos() (int, error) {
 	var orgs []*model.Org
 	orgs, err := repository.GetAllOrgs()
 	if err != nil {
-
 		return 0, err
 	}
+
 	err = repository.ClearRepos()
 	if err != nil {
 		return 0, err
 	}
+
 	wg := sync.WaitGroup{}
 	sem := make(chan struct{}, 10)
 	errorsChan := make(chan error, len(orgs))
+	repoCount := make(chan int, len(orgs))
+	totalRepos := 0
+
 	for _, org := range orgs {
 		wg.Add(1)
-		sem <- struct{}{}
-		if err := SyncOrgRepos(org.Username, &wg, sem); err != nil {
-			errorsChan <- err
-		}
+
+		go func(org *model.Org) {
+			defer wg.Done()
+			sem <- struct{}{}
+
+			if err := SyncOrgRepos(org.Username, sem, repoCount); err != nil {
+				errorsChan <- err
+			}
+
+			<-sem
+		}(org)
 	}
+
+	wg.Wait()
+
+	close(repoCount)
 	close(errorsChan)
-	close(sem)
+
 	for e := range errorsChan {
 		err = e
 		fmt.Println(err)
 	}
-	wg.Wait()
-	return len(orgs), nil
+	for count := range repoCount {
+		fmt.Println("Testing Channels: ", count)
+		totalRepos += count
+	}
+
+	fmt.Println("Total Repos: ", totalRepos)
+
+	return totalRepos, err
 }
+
 func SyncRepos(c echo.Context) error {
 	orgsSynced, err := SyncAllRepos()
 	if err != nil {
@@ -234,9 +266,7 @@ func SyncRepos(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]int{"Repos For Organization": orgsSynced})
 }
 
-func SyncNewUserActivities(username string, wg *sync.WaitGroup, sem chan struct{}) error {
-	defer wg.Done()
-	defer func() { <-sem }()
+func SyncNewUserActivities(username string, sem chan struct{}) error {
 
 	user, err := repository.GetUser(username)
 
@@ -252,8 +282,7 @@ func SyncNewUserActivities(username string, wg *sync.WaitGroup, sem chan struct{
 	if err != nil {
 		return err
 	}
-	fmt.Printf("User %s has %d new activities.\n", username, len(activities))
-	fmt.Printf("activities: %v\n", activities)
+
 	return nil
 }
 
@@ -268,26 +297,39 @@ func SyncDailyActivities() (int, error) {
 	sem := make(chan struct{}, 10)
 	errorsChan := make(chan error, len(users))
 	usersSynced := 0
+	mu := sync.Mutex{}
+
 	for _, user := range users {
 		wg.Add(1)
-		sem <- struct{}{}
 
-		if err := SyncNewUserActivities(user.Username, &wg, sem); err != nil {
-			errorsChan <- err
-		} else {
-			usersSynced++
-		}
+		go func(user model.User) {
+			defer wg.Done()
+			sem <- struct{}{}
 
+			if err := SyncNewUserActivities(user.Username, sem); err != nil {
+				errorsChan <- err
+			} else {
+
+				mu.Lock()
+				usersSynced++
+				mu.Unlock()
+			}
+
+			<-sem
+		}(user)
 	}
+
 	wg.Wait()
 	close(errorsChan)
 	close(sem)
+
 	for e := range errorsChan {
 		err = e
 		fmt.Println(err)
 	}
+
 	fmt.Println("Synced ", usersSynced, " users")
-	return len(users), err
+	return usersSynced, err
 }
 
 func SyncNewActivity(c echo.Context) error {
@@ -298,39 +340,73 @@ func SyncNewActivity(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]int{"User's New Activities": users})
 }
 
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
 func DailySync(c echo.Context) error {
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+	defer ws.Close()
+	defer func() {
+		err = repository.UpdateSyncStatus(true)
+		if err != nil {
+			ws.WriteMessage(websocket.TextMessage, []byte("Error updating sync status: "+err.Error()))
+		}
+	}()
+
+	// Send initial status to the client
+	ws.WriteMessage(websocket.TextMessage, []byte("Sync process started"))
+	startTime := time.Now()
+	err = repository.UpdateSyncStatus(false)
+	if err != nil {
+		ws.WriteMessage(websocket.TextMessage, []byte("Error updating sync status: "+err.Error()))
+
+	}
+
 	orgs, err := SyncAllOrganizations()
 
 	if err != nil {
+		ws.WriteMessage(websocket.TextMessage, []byte("Error syncing organizations: "+err.Error()))
 
-		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	fmt.Println("Organizations Synchronised")
+	ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Organizations Synced: %d", orgs)))
 
 	users, err := SyncAllUsers()
 	if err != nil {
+		ws.WriteMessage(websocket.TextMessage, []byte("Error syncing users: "+err.Error()))
 
-		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	fmt.Println("Users Synchronised")
+	ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Users Synced: %d", users)))
 
-	orgsRepo, err := SyncAllRepos()
+	repos, err := SyncAllRepos()
 	if err != nil {
+		ws.WriteMessage(websocket.TextMessage, []byte("Error syncing repos: "+err.Error()))
 
-		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	fmt.Println("Repos Synchronised")
+	ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Repositories Synced: %d", repos)))
 
-	usersHeatmap, err := SyncAllHeatmaps()
-	if err != nil {
-
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
 	usersNewActivities, err := SyncDailyActivities()
 	if err != nil {
+		ws.WriteMessage(websocket.TextMessage, []byte("Error syncing daily activities: "+err.Error()))
 
-		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+	elapsedTime := int64(time.Since(startTime).Seconds())
 	fmt.Println("Daily Activities Synchronised")
-	return c.JSON(http.StatusOK, map[string]int{"Organizations Synced": orgs, "Users Synced": users, "Repos Synced For Organizations": orgsRepo, "Heatmaps Synced For Users": usersHeatmap, "New Activities Synced For Users": usersNewActivities})
+	ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("New Activities Synced For Users: %d", usersNewActivities)))
+	err = repository.SyncSystemSummary(orgs, repos, users, time.Now().Local(), elapsedTime)
+	if err != nil {
+		ws.WriteMessage(websocket.TextMessage, []byte("Error syncing system summary: "+err.Error()))
+	}
+	fmt.Println("System Summary Synchronised")
+	ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Sync completed in %d seconds", elapsedTime)))
+	return nil
+
 }

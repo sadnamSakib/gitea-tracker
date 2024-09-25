@@ -6,7 +6,7 @@ import (
 )
 
 // InitAuthRoutes sets up the routes for authentication
-func InitOrgRoutes(e *echo.Echo) {
+func InitOrgRoutes(e *echo.Group) {
 	orgGroup := e.Group("/orgs")
 	orgGroup.GET("/", controller.GetAllOrganizationFromDB)
 	orgGroup.GET("/:org/repos/search", controller.SearchRepos)

@@ -6,7 +6,7 @@ import (
 )
 
 // InitAuthRoutes sets up the routes for authentication
-func InitUserRoutes(e *echo.Echo) {
+func InitUserRoutes(e *echo.Group) {
 	userGroup := e.Group("/users")
 	userGroup.GET("/", controller.GetAllUsers)
 	userGroup.GET("/search", controller.SearchUsers)

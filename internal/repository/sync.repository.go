@@ -12,6 +12,7 @@ import (
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var (
@@ -19,6 +20,7 @@ var (
 )
 
 const heatMapCollection = "heatmap"
+const systemSummaryCollection = "systemSummary"
 
 func FetchOrgsFromGitea(page int) ([]model.Org, error) {
 	orgs := make([]model.Org, 0)
@@ -65,7 +67,6 @@ func SyncOrgsWithDB(orgs []model.Org) error {
 
 	_, err := collection.InsertMany(context.Background(), documents)
 	if err != nil {
-
 		return err
 	}
 
@@ -283,12 +284,25 @@ func SyncActivitiesWithDB(username string, activities []model.Activity) error {
 	}
 
 	lastUpdateTime := time.Now().UTC()
+	now := time.Now()
+	weekday := int(now.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	lastMonday := now.AddDate(0, 0, -weekday+1).Format("2006-01-02")
+	lastMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+	lastYear := time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+	weeklyCommits, monthlyCommits, yearlyCommits, allTimeCommits := AggregateUserCommits(lastMonday, lastMonth, lastYear, activities)
 
 	update := bson.M{
 		"$set": bson.M{
-			"last_updated":  lastUpdateTime,
-			"total_commits": len(activities),
-			"repos":         repoList,
+			"last_updated":                  lastUpdateTime,
+			"total_commits":                 len(activities),
+			"repos":                         repoList,
+			"aggregated_commits.last_week":  weeklyCommits,
+			"aggregated_commits.last_month": monthlyCommits,
+			"aggregated_commits.last_year":  yearlyCommits,
+			"aggregated_commits.all_time":   allTimeCommits,
 		},
 	}
 
@@ -331,12 +345,12 @@ func FetchNewUserActivityFromGitea(page int, userName string, lastUpdateTime tim
 			commitActivities = append(commitActivities, activity)
 		}
 		if activity.Date.Before(lastUpdateTime) {
-			return activities, nil
+			return commitActivities, nil
 		}
 	}
 
 	if len(commitActivities) == 0 {
-		return activities, nil
+		return commitActivities, nil
 	}
 	next_activities, err := FetchNewUserActivityFromGitea(page+1, userName, lastUpdateTime)
 	if err != nil {
@@ -394,14 +408,28 @@ func SyncNewActivitiesWithDB(username string, activities []model.Activity) error
 		repoList = append(repoList, repo)
 	}
 	fmt.Println("Total repos : ", len(reposSet), " for user ", username)
+	lastUpdateTime := time.Now().UTC()
+	now := time.Now()
+	weekday := int(now.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	lastMonday := now.AddDate(0, 0, -weekday+1).Format("2006-01-02")
+	lastMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+	lastYear := time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+	weeklyCommits, monthlyCommits, yearlyCommits, allTimeCommits := AggregateUserCommits(lastMonday, lastMonth, lastYear, activities)
 
 	update := bson.M{
 		"$set": bson.M{
-			"last_updated": time.Now().UTC(),
+			"last_updated": lastUpdateTime,
 			"repos":        repoList,
 		},
 		"$inc": bson.M{
-			"total_commits": len(activities),
+			"total_commits":                 len(activities),
+			"aggregated_commits.last_week":  weeklyCommits,
+			"aggregated_commits.last_month": monthlyCommits,
+			"aggregated_commits.last_year":  yearlyCommits,
+			"aggregated_commits.all_time":   allTimeCommits,
 		},
 	}
 
@@ -462,6 +490,56 @@ func SyncHeatMaps(heatmap model.Heatmap) error {
 
 	return nil
 }
+func SyncSystemSummary(orgs, repos, users int, last_synced time.Time, elapsedTime int64) error {
+	collection := db.MongoDatabase.Collection(systemSummaryCollection)
+	filter := bson.M{"username": "system"}
+	update := bson.M{
+		"$set": bson.M{
+			"total_orgs":            orgs,
+			"total_repos":           repos,
+			"total_users":           users,
+			"last_synced":           last_synced,
+			"is_synced":             true,
+			"estimated_update_time": elapsedTime,
+		},
+	}
+
+	// Set the upsert option to true to insert if the document doesn't exist
+	opts := options.Update().SetUpsert(true)
+
+	_, err := collection.UpdateOne(context.Background(), filter, update, opts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetSystemSummary() (model.SystemSummary, error) {
+	collection := db.MongoDatabase.Collection(systemSummaryCollection)
+	filter := bson.M{"username": "system"}
+	var summary model.SystemSummary
+	err := collection.FindOne(context.Background(), filter).Decode(&summary)
+	if err != nil {
+		return model.SystemSummary{}, err
+	}
+	return summary, nil
+}
+
+func UpdateSyncStatus(is_synced bool) error {
+	collection := db.MongoDatabase.Collection(systemSummaryCollection)
+	filter := bson.M{"username": "system"}
+	update := bson.M{
+		"$set": bson.M{
+			"is_synced": is_synced,
+		},
+	}
+	opts := options.Update().SetUpsert(true)
+	_, err := collection.UpdateOne(context.Background(), filter, update, opts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func ClearHeatmaps() error {
 	collection := db.MongoDatabase.Collection(heatMapCollection)
@@ -494,4 +572,26 @@ func ClearActivities() error {
 		return err
 	}
 	return nil
+}
+
+func AggregateUserCommits(lastMonday, LastMonth, LastYear string, activities []model.Activity) (int, int, int, int) {
+	var weekly int
+	var monthly int
+	var yearly int
+	var allTime int
+	for _, activity := range activities {
+		date := activity.Date.Format("2006-01-02")
+		if date >= lastMonday {
+			weekly++
+		}
+		if date >= LastMonth {
+			monthly++
+		}
+		if date >= LastYear {
+			yearly++
+		}
+		allTime++
+
+	}
+	return weekly, monthly, yearly, allTime
 }

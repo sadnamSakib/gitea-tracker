@@ -7,7 +7,9 @@ import (
 
 func InitRoutes(e *echo.Echo) {
 	e.Use(middleware.Logger)
-	InitOrgRoutes(e)
-	InitUserRoutes(e)
-	InitSyncRoutes(e)
+	apiGroup := e.Group("/api")
+	InitOrgRoutes(apiGroup)
+	InitUserRoutes(apiGroup)
+	InitSyncRoutes(apiGroup)
+	InitWebRoutes(e)
 }

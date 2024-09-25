@@ -70,6 +70,17 @@ func GetAllReposFromOrg(orgName, page, limit string) ([]model.Repo, error) {
 	return repos, nil
 }
 
+func GetRepo(orgName, repoName string) (model.Repo, error) {
+	repo := model.Repo{}
+	collection := db.MongoDatabase.Collection(repoCollection)
+	err := collection.FindOne(context.Background(), bson.M{"owner.username": orgName, "name": repoName}).Decode(&repo)
+	if err != nil {
+
+		return model.Repo{}, err
+	}
+	return repo, nil
+}
+
 func GetAllUsersFromRepo(org, repo, page, limit string) ([]model.User, error) {
 
 	collection := db.MongoDatabase.Collection("users")

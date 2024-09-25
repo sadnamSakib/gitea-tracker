@@ -1,0 +1,212 @@
+package components
+import(
+    "strconv"
+    "time"
+)
+
+script DashboardScript(){
+    function completedIcon() {
+        return `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>`;
+    }
+    
+    window.onload = function () {
+        document.getElementById('sync-button').addEventListener('click', function () {
+            const syncButton = document.getElementById('sync-button');
+            const syncIcon = document.getElementById('sync-icon');
+            const syncMessages = document.getElementById('sync-messages');
+            const syncText = document.getElementById('sync-text');
+            const syncingSection = document.getElementById('syncing-section');
+            const progressCounter = document.getElementById('progress-counter'); // For "Completed X/4"
+            syncingSection.classList.remove('hidden');
+            let completedSteps = 0;
+            const totalSteps = 4;
+            let startTime;
+
+            const socket = new WebSocket('ws://localhost:8080/api/sync/dailySync');
+
+    
+            socket.onmessage = function (event) {
+                const message = event.data;
+                console.log(message);
+                
+                if (message.includes('Organizations Synced')) {
+                    document.getElementById('step-org').innerHTML = completedIcon(); 
+                    completedSteps++;
+                } else if (message.includes('Users Synced')) {
+                    document.getElementById('step-users').innerHTML = completedIcon(); // Update to green checkmark
+                    completedSteps++;
+                } else if (message.includes('Repositories Synced')) {
+                    document.getElementById('step-repos').innerHTML = completedIcon(); // Update to green checkmark
+                    completedSteps++;
+                } else if (message.includes('New Activities Synced')) {
+                    document.getElementById('step-activities').innerHTML = completedIcon(); // Update to green checkmark
+                    completedSteps++;
+                }
+
+                progressCounter.textContent = `Completed ${completedSteps}/${totalSteps}`;
+
+               
+                const messageElement = document.createElement('div');
+               
+                
+
+                // Reset button and spinner when all steps are done
+                if (message.includes('Sync completed')) {
+                    const endTime = new Date();
+                    const timeTaken = Math.round((endTime - startTime) / 1000);
+                    messageElement.textContent = `Sync completed in ${timeTaken} seconds`;
+                    syncMessages.appendChild(messageElement);
+                    syncText.textContent = "Sync Now"; // Reset text when done
+                    syncIcon.classList.remove('animate-spin');
+                    syncButton.disabled = false;
+                }
+            };
+
+            // WebSocket connection open
+            socket.onopen = function () {
+                startTime = new Date();
+                syncText.textContent = "Sync in progress...";
+                syncButton.disabled = true;
+                syncIcon.classList.add('animate-spin');
+            };
+
+            // Handle WebSocket errors
+            socket.onerror = function (error) {
+                console.error('WebSocket error:', error);
+                alert('Sync failed. Please try again.');
+                syncText.textContent = "Sync Now"; 
+                syncButton.disabled = false;
+                syncIcon.classList.remove('animate-spin');
+            };
+        });
+    }
+}
+
+
+templ Home(orgs int,repos int,users int, last_sync time.Time,is_synced bool){
+    
+    <!DOCTYPE html>
+    <html lang="en">
+        @Header()
+        <body>
+            @Navbar()
+            @DashboardScript()
+            <div class="container mx-auto py-10">
+                <div class="mx-6">
+                    <h1 class="text-6xl font-semibold text-left mb-8">Last Synchronization </h1>
+                    <div class="text-2xl text-gray-700 text-left mb-8">
+                        { func() string {
+                            location, err := time.LoadLocation("Asia/Dhaka")
+                            if err != nil {
+                                location = time.UTC
+                            }
+                        
+                            localTime := last_sync.In(location)
+                            return localTime.Format("2006-01-02 03:04:05 PM")
+                        }()
+                        }
+                    </div>
+                </div>
+        
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mx-6">
+                    <!-- Card 1: Organizations -->
+                    <div class="w-80 h-40 bg-white shadow-sm rounded-lg border border-gray-300 p-4 flex items-center">
+                        <div class="mr-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-12 h-12 text-gray-600">
+                                <path d="M184 48l144 0c4.4 0 8 3.6 8 8l0 40L176 96l0-40c0-4.4 3.6-8 8-8zm-56 8l0 40L64 96C28.7 96 0 124.7 0 160l0 96 192 0 128 0 192 0 0-96c0-35.3-28.7-64-64-64l-64 0 0-40c0-30.9-25.1-56-56-56L184 0c-30.9 0-56 25.1-56 56zM512 288l-192 0 0 32c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32l0-32L0 288 0 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-128z"/>
+                            </svg>
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <div class="text-2xl font-semibold">{ strconv.Itoa(orgs) }</div>
+                            <div class="text-lg text-gray-600">Organizations</div>
+                        </div>
+                    </div>
+        
+                    <!-- Card 2: Repositories -->
+                    <div class="w-80 h-40 bg-white shadow-sm rounded-lg border border-gray-300 p-4 flex items-center">
+                        <div class="mr-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-12 h-12 text-gray-600">
+                                <path d="M80 104a24 24 0 1 0 0-48 24 24 0 1 0 0 48zm80-24c0 32.8-19.7 61-48 73.3l0 87.8c18.8-10.9 40.7-17.1 64-17.1l96 0c35.3 0 64-28.7 64-64l0-6.7C307.7 141 288 112.8 288 80c0-44.2 35.8-80 80-80s80 35.8 80 80c0 32.8-19.7 61-48 73.3l0 6.7c0 70.7-57.3 128-128 128l-96 0c-35.3 0-64 28.7-64 64l0 6.7c28.3 12.3 48 40.5 48 73.3c0 44.2-35.8 80-80 80s-80-35.8-80-80c0-32.8 19.7-61 48-73.3l0-6.7 0-198.7C19.7 141 0 112.8 0 80C0 35.8 35.8 0 80 0s80 35.8 80 80zm232 0a24 24 0 1 0 -48 0 24 24 0 1 0 48 0zM80 456a24 24 0 1 0 0-48 24 24 0 1 0 0 48z"/>
+                            </svg>
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <div class="text-2xl font-semibold">{ strconv.Itoa(repos) }</div>
+                            <div class="text-lg text-gray-600">Repositories</div>
+                        </div>
+                    </div>
+        
+                    <!-- Card 3: Users -->
+                    <div class="w-80 h-40 bg-white shadow-sm rounded-lg border border-gray-300 p-4 flex items-center">
+                        <div class="mr-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-12 h-12 text-gray-600">
+                                <path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512l388.6 0c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304l-91.4 0z"/>
+                            </svg>
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <div class="text-2xl font-semibold">{ strconv.Itoa(users) }</div>
+                            <div class="text-lg text-gray-600">Users</div>
+                        </div>
+                    </div>
+        
+                    
+                    <div class="w-80 bg-white shadow-sm rounded-lg border border-gray-300 p-4 flex flex-col items-center justify-center space-y-4">
+                       
+                        if is_synced {
+                        <button id="sync-button" class="flex items-start space-x-3 bg-blue-600 text-white py-2 px-4 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" id="sync-icon" class="w-6 h-6 mr-4">
+                                    <path fill="#ffffff" d="M105.1 202.6c7.7-21.8 20.2-42.3 37.8-59.8c62.5-62.5 163.8-62.5 226.3 0L386.3 160 352 160c-17.7 0-32 14.3-32 32s14.3 32 32 32l111.5 0c0 0 0 0 0 0l.4 0c17.7 0 32-14.3 32-32l0-112c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 35.2L414.4 97.6c-87.5-87.5-229.3-87.5-316.8 0C73.2 122 55.6 150.7 44.8 181.4c-5.9 16.7 2.9 34.9 19.5 40.8s34.9-2.9 40.8-19.5zM39 289.3c-5 1.5-9.8 4.2-13.7 8.2c-4 4-6.7 8.8-8.1 14c-.3 1.2-.6 2.5-.8 3.8c-.3 1.7-.4 3.4-.4 5.1L16 432c0 17.7 14.3 32 32 32s32-14.3 32-32l0-35.1 17.6 17.5c0 0 0 0 0 0c87.5 87.4 229.3 87.4 316.7 0c24.4-24.4 42.1-53.1 52.9-83.8c5.9-16.7-2.9-34.9-19.5-40.8s-34.9 2.9-40.8 19.5c-7.7 21.8-20.2 42.3-37.8 59.8c-62.5 62.5-163.8 62.5-226.3 0l-.1-.1L125.6 352l34.4 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L48.4 288c-1.6 0-3.2 .1-4.8 .3s-3.1 .5-4.6 1z"/>
+                                </svg>
+                                <span id="sync-text">Sync Now</span>
+                            </button>
+                            }else{
+                                <button id="sync-button" disabled class="flex items-start space-x-3 bg-blue-600 text-white py-2 px-4 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" id="sync-icon" class="w-6 h-6 mr-4 animate-spin">
+                                    <path fill="#ffffff" d="M105.1 202.6c7.7-21.8 20.2-42.3 37.8-59.8c62.5-62.5 163.8-62.5 226.3 0L386.3 160 352 160c-17.7 0-32 14.3-32 32s14.3 32 32 32l111.5 0c0 0 0 0 0 0l.4 0c17.7 0 32-14.3 32-32l0-112c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 35.2L414.4 97.6c-87.5-87.5-229.3-87.5-316.8 0C73.2 122 55.6 150.7 44.8 181.4c-5.9 16.7 2.9 34.9 19.5 40.8s34.9-2.9 40.8-19.5zM39 289.3c-5 1.5-9.8 4.2-13.7 8.2c-4 4-6.7 8.8-8.1 14c-.3 1.2-.6 2.5-.8 3.8c-.3 1.7-.4 3.4-.4 5.1L16 432c0 17.7 14.3 32 32 32s32-14.3 32-32l0-35.1 17.6 17.5c0 0 0 0 0 0c87.5 87.4 229.3 87.4 316.7 0c24.4-24.4 42.1-53.1 52.9-83.8c5.9-16.7-2.9-34.9-19.5-40.8s-34.9 2.9-40.8 19.5c-7.7 21.8-20.2 42.3-37.8 59.8c-62.5 62.5-163.8 62.5-226.3 0l-.1-.1L125.6 352l34.4 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L48.4 288c-1.6 0-3.2 .1-4.8 .3s-3.1 .5-4.6 1z"/>
+                                </svg>
+                                <span id="sync-text">Sync in progress...</span>
+                            </button>
+                            }
+                            <div id="syncing-section" class="hidden">
+                                <div id="progress-counter" class="text-gray-700 font-semibold">
+                                    Completed 0/4
+                                </div>
+    
+                                <div id="sync-messages" class="w-full bg-gray-100 rounded p-2 text-gray-800">
+                                    <div class="flex justify-between items-center">
+                                        <span>Organizations</span>
+                                        <span id="step-org"><svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <circle cx="12" cy="12" r="10" stroke-width="2" />
+                                            </svg></span> 
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>Users</span>
+                                        <span id="step-users"><svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <circle cx="12" cy="12" r="10" stroke-width="2" />
+                                            </svg></span> 
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>Repositories</span>
+                                        <span id="step-repos"><svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <circle cx="12" cy="12" r="10" stroke-width="2" />
+                                            </svg></span> 
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>Activities</span>
+                                        <span id="step-activities"><svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <circle cx="12" cy="12" r="10" stroke-width="2" />
+                                            </svg></span> 
+                                    </div>
+                                </div>
+                            </div>
+
+                            
+                       
+                    </div>
+        
+                </div>
+            </div>
+        </body>       
+    </html>
+}
