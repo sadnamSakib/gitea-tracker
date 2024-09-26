@@ -145,5 +145,30 @@ After starting the application, you can access the following routes:
 | `GET`      | `/orgs/:org/repos/:repo`                         | Render repository page for a specific repository    |
 
 
+### User Manual
+1. **Home Page**: The home page displays the number of total organizations,users and repositories accross all organizations.The sync button can be used to sync all organizations,users,repositories and new activities. 
+
+![alt text](dashboard.png)
+
+2. **Organizations Page**: The organizations page displays all organizations in the database. This page is displayed when a user clicks the repositories option on the navbar.
+
+![alt text](Organizations.png)
+
+3. **Repositories Page**: Upon clicking an organization, the repositories page displays all repositories of the selected organization. The search bar can be used to search for repositories. The following section shows the repositories you have chosen to follow. The top repositories section shows the top repositories based on the number of commits.The duration of the commits can be changed using the dropdown.
+
+![alt text](repositories.png)
+
+4. **Repository Page**: Upon clicking a repository, the repository page displays the repository's details and activities. On the left we can see the name of the repository along with its creation date..The following button can be clicked to follow that repository.Below the follow button is the list of users who have contributed to this repository and the counts of their individual commits to this repository. Also,on the right side we can see a dougnut chart which shows the percentage of commits made in this repository by the users who have contributed to it.The line chart shows the number of commits made in this repository over a period of time.The duration of the commits can be changed using the dropdown.The line chart initially shows the aggregated commits made by all users in that time period but if you click on a user in the list of users who have contributed to this repository then the line chart will show the commits made by that user in that time period.
+
+![alt text](repository.png)
+
+5. **Users Page**: The users page displays all users in the database. This page is displayed when a user clicks the users option on the navbar.The searchbar can be used to search for users. The following section shows the users you have chosen to follow.The top contributors section shows the top contributors based on the number of commits.The duration of the commits can be changed using the dropdown.
+
+![alt text](users.png)
+
+6. **User Profile Page**: Upon clicking a user, the user profile page displays the user's details and activities. On the left we can see the name,email and avatar of the user along with their lifetime commit count and the total repositories they have contributed to in their lifetime.The following button can be clicked to follow that user.On the right side of the page we can see a dougnut chart and a line chart. The dougnut chart shows the percentage of commits made by the user in the repositories they have contributed to.The line chart shows the number of commits made by the user in the repositories they have contributed to over a period of time.The duration of the commits can be changed using the dropdown.
+
+![alt text](user.png)
+
 
 
