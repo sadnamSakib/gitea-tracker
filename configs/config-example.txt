@@ -1,0 +1,15 @@
+{
+  "database": {
+    "mongodb": {
+      "uri": "PLACE YOUR MONGODB URI HERE",
+      "database": "gitea-committer"
+    }
+  },
+  "JWT": {
+    "secret": "Z1xcvbnm,./"
+  },
+  "GITEA": {
+    "api_key": "PLACE GITEA ACCESS TOKEN ( API KEY ) HERE",
+    "base_url":"https://gitea.vivasoftltd.com/api/v1"
+  }
+}
