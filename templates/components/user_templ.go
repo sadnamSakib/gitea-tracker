@@ -57,7 +57,7 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = UserScript(user.Username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = UserScript(user.Username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList, user.Following).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -68,7 +68,7 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(user.Avatar_url)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 29, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 28, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -81,33 +81,33 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Avatar of %s", user.Username))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 29, Col: 102}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 28, Col: 102}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" class=\"rounded-full w-32 h-32 object-cover\"></div><div class=\"text-lg font-semibold text-center mb-2\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" class=\"rounded-full w-32 h-32 object-cover\"></div><div class=\"text-lg font-semibold text-center mb-2 flex justify-center items-center\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(user.Username)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 33, Col: 90}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 32, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"text-sm text-gray-700 text-center mb-2\"><strong>Email:</strong> ")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" <button id=\"followButton\" class=\"ml-2 px-2 py-1 text-sm rounded-md font-medium\"><!-- The button text will be handled in the script --></button></div><div class=\"text-sm text-gray-700 text-center mb-2\"><strong>Email:</strong> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(user.Email)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 37, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 40, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -118,9 +118,9 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(user.Total_commits))
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(user.Aggregated_Commits.All_Time))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 41, Col: 97}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 44, Col: 111}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -133,7 +133,7 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(user.Repos)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 46, Col: 105}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 48, Col: 105}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -152,7 +152,7 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 			return total
 		}()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 70, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 72, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -165,7 +165,7 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(repoNameList)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 74, Col: 115}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/user.templ`, Line: 76, Col: 115}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -210,10 +210,70 @@ func User(user model.User, dailyCommitCountList []int, repoCommitCountList []int
 	})
 }
 
-func UserScript(username string, dailyCommitCountList []int, repoCommitCountList []int, repoNameList []string, dateList []string) templ.ComponentScript {
+func UserScript(username string, dailyCommitCountList []int, repoCommitCountList []int, repoNameList []string, dateList []string, following bool) templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_UserScript_5630`,
-		Function: `function __templ_UserScript_5630(username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList){function renderCommitDailyChart(dates, commitCounts) {
+		Name: `__templ_UserScript_761a`,
+		Function: `function __templ_UserScript_761a(username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList, following){async function toggleFollow() {
+        const followButton = document.getElementById('followButton');
+
+        // Set the initial state of the button based on the following attribute
+        if (following) {
+            followButton.innerText = 'Following';
+            followButton.classList.add('following');
+        } else {
+            followButton.innerText = 'Follow';
+            followButton.classList.add('follow');
+        }
+
+        // Add click event to toggle between follow/unfollow
+        followButton.addEventListener('click', async function () {
+            if (followButton.innerText === 'Follow') {
+                // Call the follow API
+                const followResponse = await fetch(` + "`" + `/api/users/${username}/follow` + "`" + `, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (followResponse.ok) {
+                    // Change to 'Following'
+                    followButton.innerText = 'Following';
+                    followButton.classList.remove('follow');
+                    followButton.classList.add('following');
+
+                    // Update following status
+                    following = true;
+                    console.log(` + "`" + `Now following ${username}` + "`" + `);
+                } else {
+                    console.error('Failed to follow user.');
+                }
+            } else {
+                // Call the unfollow API
+                const unfollowResponse = await fetch(` + "`" + `/api/users/${username}/unfollow` + "`" + `, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (unfollowResponse.ok) {
+                    // Change to 'Follow'
+                    followButton.innerText = 'Follow';
+                    followButton.classList.remove('following');
+                    followButton.classList.add('follow');
+
+                    // Update following status
+                    following = false;
+                    console.log(` + "`" + `Unfollowed ${username}` + "`" + `);
+                } else {
+                    console.error('Failed to unfollow user.');
+                }
+            }
+        });
+    }
+
+    function renderCommitDailyChart(dates, commitCounts) {
         var ctx = document.getElementById('commitDailyChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
@@ -229,7 +289,7 @@ func UserScript(username string, dailyCommitCountList []int, repoCommitCountList
             },
             options: {
                 responsive: true, 
-                maintainAspectRatio: false, // Allows you to control the aspect ratio
+                maintainAspectRatio: false, 
                 aspectRatio: 1,
                 scales: {
                     y: {
@@ -238,7 +298,7 @@ func UserScript(username string, dailyCommitCountList []int, repoCommitCountList
                 },
                 plugins: {
                     legend: {
-                        display: false // This hides the legend
+                        display: false
                     }
                 }
             }
@@ -295,26 +355,22 @@ func UserScript(username string, dailyCommitCountList []int, repoCommitCountList
                 }
             }
         });
-        
     }
 
     window.onload = function () {
-        
         renderCommitDailyChart(dateList, dailyCommitCountList);
         renderRepoCommitChart(repoNameList, repoCommitCountList);
+        toggleFollow();
 
-       
         document.getElementById('viewBy').addEventListener('change', function () {
             var viewBy = document.getElementById('viewBy').value;
-                var url = ` + "`" + `/users/${username}?viewBy=${viewBy}` + "`" + `;
-                window.location.href = url;
-                
+            var url = ` + "`" + `/users/${username}?viewBy=${viewBy}` + "`" + `;
+            window.location.href = url;
         });
     };
-    
 }`,
-		Call:       templ.SafeScript(`__templ_UserScript_5630`, username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList),
-		CallInline: templ.SafeScriptInline(`__templ_UserScript_5630`, username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList),
+		Call:       templ.SafeScript(`__templ_UserScript_761a`, username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList, following),
+		CallInline: templ.SafeScriptInline(`__templ_UserScript_761a`, username, dailyCommitCountList, repoCommitCountList, repoNameList, dateList, following),
 	}
 }
 

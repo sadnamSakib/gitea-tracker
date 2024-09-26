@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 
+	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/app/service"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/repository"
 
 	"github.com/labstack/echo/v4"
@@ -15,6 +16,22 @@ func GetUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, user)
+}
+func FollowUser(c echo.Context) error {
+	userName := c.Param("username")
+	err := repository.FollowUser(userName)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "User Followed")
+}
+func UnfollowUser(c echo.Context) error {
+	userName := c.Param("username")
+	err := repository.UnfollowUser(userName)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "User Unfollowed")
 }
 
 func GetUserActivityByDateRange(c echo.Context) error {
@@ -56,11 +73,10 @@ func SearchUsers(c echo.Context) error {
 
 }
 
-func GetUserHeatmap(c echo.Context) error {
-	userName := c.Param("username")
-	heatmaps, err := repository.GetUserHeatmap(userName)
+func SyncUsers(c echo.Context) error {
+	usersSynced, err := service.SyncAllUsers()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, heatmaps)
+	return c.JSON(http.StatusOK, map[string]int{"Users": usersSynced})
 }

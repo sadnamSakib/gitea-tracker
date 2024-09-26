@@ -12,5 +12,6 @@ func InitUserRoutes(e *echo.Group) {
 	userGroup.GET("/search", controller.SearchUsers)
 	userGroup.GET("/:username", controller.GetUser)
 	userGroup.GET("/:username/activities", controller.GetUserActivityByDateRange)
-	userGroup.GET("/:username/heatmap", controller.GetUserHeatmap)
+	userGroup.POST("/:username/follow", controller.FollowUser)
+	userGroup.POST("/:username/unfollow", controller.UnfollowUser)
 }

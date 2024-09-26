@@ -4,12 +4,51 @@ import (
     "gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
 )
 
-script ReposScript(repos []model.Repo,org string) {
+script ReposScript(repos []model.Repo, org string) {
+    let currentFilter = "this_week"; // Default filter is "this_week"
+    function displayFollowingRepos(repos) {
+        const followingRepoListDiv = document.getElementById('FollowingRepoList');
+        followingRepoListDiv.innerHTML = ''; // Clear previous content
+
+        // Filter repositories where 'following' is true
+        const followingRepos = repos.filter(repo => repo.following === true);
+
+        // Check if there are any following repos
+        if (followingRepos.length > 0) {
+            followingRepos.forEach(repo => {
+                // Create the HTML structure for each repository
+                const repoItem = `
+                    <div class="p-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 cursor-pointer" data-repo-id="${repo.name}">
+                        <div class="flex flex-col items-start">
+                            <div class="font-semibold">${repo.name}</div>
+                            <div class="text-gray-500 text-sm">Last Activity: ${new Date(repo.updated_at).toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                `;
+
+                // Append the repository to the followingRepoListDiv
+                followingRepoListDiv.innerHTML += repoItem;
+            });
+
+            // Attach click event listeners to dynamically generated items
+            document.querySelectorAll('[data-repo-id]').forEach((el) => {
+                el.addEventListener('click', () => {
+                    window.location.href = `/orgs/${org}/repos/${el.getAttribute('data-repo-id')}`;
+                });
+            });
+
+        } else {
+            // If no repositories are being followed, show a message
+            followingRepoListDiv.innerHTML = '<div class="p-4 text-center text-gray-500">No followed repositories.</div>';
+        }
+    }
+
+    // Function to search repositories based on the input
     function searchRepos() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         const resultsDiv = document.getElementById('searchResults');
 
-        // If query is empty, clear results and hide the container
+        // Clear results if query is empty
         if (query.length < 1) {
             resultsDiv.innerHTML = '';
             resultsDiv.classList.add('hidden');
@@ -20,9 +59,7 @@ script ReposScript(repos []model.Repo,org string) {
         resultsDiv.innerHTML = '';
 
         // Filter the repositories based on the search query
-        const filteredRepos = repos.filter(repo => {
-            return (repo.name?.toLowerCase().includes(query) || '');
-        });
+        const filteredRepos = repos.filter(repo => repo.name?.toLowerCase().includes(query));
 
         // If there are matching repositories, display them
         if (filteredRepos.length > 0) {
@@ -41,7 +78,7 @@ script ReposScript(repos []model.Repo,org string) {
             });
 
             // Attach click event listeners to dynamically generated items
-            document.querySelectorAll('[data-repo-id]').forEach((el) => {
+            document.querySelectorAll('[data-repo-id]').forEach(el => {
                 el.addEventListener('click', () => {
                     window.location.href = `/orgs/${org}/repos/${el.getAttribute('data-repo-id')}`;
                 });
@@ -50,47 +87,98 @@ script ReposScript(repos []model.Repo,org string) {
             resultsDiv.innerHTML = '<div class="p-2 text-gray-500 text-center">No matching repositories</div>';
         }
     }
-    function displaySortedRepos() {
-        const repoListDiv = document.getElementById('repoList');
 
-        // Sort the repos by Updated_at in descending order
-        const sortedRepos = repos.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+    // Function to display the sorted repositories
+    // Function to display the sorted repositories
+function displaySortedRepos() {
+    const repoListDiv = document.getElementById('repoList');
+    repoListDiv.innerHTML = ''; // Clear the previous results
 
-        // Limit to the top 20 repositories
-        sortedRepos.slice(0, 20).forEach(repo => {
-            const repoItem = `
-            <div class="p-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 cursor-pointer" data-repo-id="${repo.name}">
-                <div class="flex flex-col items-start">
-                    <div class="font-semibold">${repo.name}</div>
-                    <div class="text-gray-500 text-sm">Last Activity: ${new Date(repo.updated_at).toLocaleDateString()}</div>
-                </div>
+    // Sort the repos by the selected filter (most number of commits for this_week, this_month, etc.)
+    const sortedRepos = repos.sort((a, b) => {
+        let commitCountA = 0;
+        let commitCountB = 0;
+
+        // Set commit count based on the current filter
+        if (currentFilter === "this_week") {
+            commitCountA = a.aggregated_commits.last_week;
+            commitCountB = b.aggregated_commits.last_week;
+        } else if (currentFilter === "this_month") {
+            commitCountA = a.aggregated_commits.last_month;
+            commitCountB = b.aggregated_commits.last_month;
+        } else if (currentFilter === "this_year") {
+            commitCountA = a.aggregated_commits.last_year;
+            commitCountB = b.aggregated_commits.last_year;
+        } else {
+            commitCountA = a.aggregated_commits.all_time;
+            commitCountB = b.aggregated_commits.all_time;
+        }
+
+        // Sort by commit count in descending order
+        return commitCountB - commitCountA;
+    });
+
+    // Limit to the top 20 repositories
+    sortedRepos.slice(0, 10).forEach(repo => {
+        // Get the commit count based on the current filter
+        let commitCount = 0;
+        if (currentFilter === "this_week") {
+            commitCount = repo.aggregated_commits.last_week;
+        } else if (currentFilter === "this_month") {
+            commitCount = repo.aggregated_commits.last_month;
+        } else if (currentFilter === "this_year") {
+            commitCount = repo.aggregated_commits.last_year;
+        } else {
+            commitCount = repo.aggregated_commits.all_time;
+        }
+
+        // Display the repository card with the commit count
+        const repoItem = `
+        <div class="p-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 cursor-pointer" data-repo-id="${repo.name}">
+            <div class="flex flex-col items-start">
+                <div class="font-semibold">${repo.name}</div>
+                <div class="text-gray-700 font-medium">Commits: ${commitCount}</div>
+                <div class="text-gray-500 text-sm">Last Activity: ${new Date(repo.updated_at).toLocaleDateString()}</div>
             </div>
-            
-            `;
-            repoListDiv.innerHTML += repoItem;
-        });
+        </div>
+        `;
+        repoListDiv.innerHTML += repoItem;
+    });
 
-        // Attach click event listeners to dynamically generated items
-        document.querySelectorAll('[data-repo-id]').forEach((el) => {
-            el.addEventListener('click', () => {
-                window.location.href = `/orgs/${org}/repos/${el.getAttribute('data-repo-id')}`;
-            });
+    // Attach click event listeners to dynamically generated items
+    document.querySelectorAll('[data-repo-id]').forEach(el => {
+        el.addEventListener('click', () => {
+            window.location.href = `/orgs/${org}/repos/${el.getAttribute('data-repo-id')}`;
         });
+    });
+}
+
+
+    // Function to handle dropdown filter change
+    function handleFilterChange(event) {
+        currentFilter = event.target.value; // Update the current filter based on dropdown selection
+        displaySortedRepos(); // Re-render the repositories with the new filter
     }
 
+    // Initialize the script on window load
     window.onload = function () {
         document.getElementById('searchInput').addEventListener('input', searchRepos);
-        displaySortedRepos();
+        document.getElementById('filterDropdown').addEventListener('change', handleFilterChange); // Listen for filter change
+        displaySortedRepos(); // Display sorted repositories on initial load
+        displayFollowingRepos(repos);
     };
 }
-templ Repos(repos []model.Repo,org string) {
+
+
+templ Repos(repos []model.Repo, org string) {
     <!DOCTYPE html>
     <html lang="en">
         @Header()
         <body>
             @Navbar()
-           
-            @ReposScript(repos,org)
+
+            @ReposScript(repos, org)
+
             <div class="container mx-auto py-10">
                 <h1 class="text-2xl font-bold text-center mb-8">Search Repositories</h1>
 
@@ -99,10 +187,49 @@ templ Repos(repos []model.Repo,org string) {
                     <input type="text" id="searchInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Search repositories by name...">
                     
                     <!-- Results Container -->
-                    <div id="searchResults" class="z-10 mx-auto  w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden">
+                    <div id="searchResults" class="z-10 mx-auto w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden">
                         <!-- Search results will be dynamically injected here -->
                     </div>
                 </div>
+
+
+                
+                <div class="flex justify-between items-center px-10 mb-2">
+                    <h2 class="text-lg font-semibold flex items-center">
+                        Following
+                    </h2>
+                    
+                </div>
+
+                <!-- Repository List -->
+                <div id="FollowingRepoList" class="mt-8 mb-2 px-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                    
+                </div>
+
+
+
+
+                <!-- Header and Dropdown for Sorting -->
+                <div class="flex justify-between items-center px-10 mb-4">
+                    <h2 class="text-lg font-semibold flex items-center">
+                        Top Repositories
+                        <span class="ml-2"> <!-- Added margin-left for spacing between text and icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" class="w-4 h-4">
+                                <!--! Font Awesome Free 6.6.0 by @fontawesome -->
+                                <path fill="#FFD43B" d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
+                            </svg>
+                        </span>
+                    </h2>
+                    
+                    <select id="filterDropdown" class="mt-2 px-4 py-2 border border-gray-300 rounded-lg">
+                        <option value="this_week">This Week</option>
+                        <option value="this_month">This Month</option>
+                        <option value="this_year">This Year</option>
+                        <option value="all_time">All Time</option>
+                    </select>
+                </div>
+
+                <!-- Repository List -->
                 <div id="repoList" class="mt-8 px-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                     <!-- The top 20 repositories sorted by Updated_at will be displayed here as cards -->
                 </div>

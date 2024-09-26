@@ -4,24 +4,32 @@ import (
     "gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
 )
 script UsersScript(users []model.User) {
+    let currentFilter = "this_week"; // Default filter is all time contributions
+
+    // Function to filter and sort users based on the search query
     function searchUsers() {
-        
         const query = document.getElementById('searchInput').value.toLowerCase();
         const resultsDiv = document.getElementById('searchResults');
-        console.log(users);
+
+        // If query is empty, hide the search results
         if (query.length < 1) {
-            resultsDiv.innerHTML ==''
+            resultsDiv.innerHTML = '';
             resultsDiv.classList.add('hidden');
             return;
         }
-        resultsDiv.innerHTML = '';
+
+        // Filter users based on the search query
         const filteredUsers = users.filter(user => {
             return (user.username?.toLowerCase().includes(query) || '') ||
                    (user.full_name?.toLowerCase().includes(query) || '') ||
                    (user.email?.toLowerCase().includes(query) || '');
         });
+
+        // Display the filtered results
         if (filteredUsers.length > 0) {
             resultsDiv.classList.remove('hidden');
+            resultsDiv.innerHTML = ''; // Clear previous results
+
             // Limit to the top 5 results
             filteredUsers.slice(0, 6).forEach(user => {
                 const resultItem = `
@@ -38,22 +46,124 @@ script UsersScript(users []model.User) {
                 resultsDiv.innerHTML += resultItem;
             });
 
-            document.querySelectorAll('[data-user-id]').forEach((el) => {
+            // Attach click event listeners to the results
+            document.querySelectorAll('[data-user-id]').forEach(el => {
                 el.addEventListener('click', () => {
                     window.location.href = `/users/${el.getAttribute('data-user-id')}`;
                 });
             });
         } else {
-            
             resultsDiv.innerHTML = 'No matching results';
         }
     }
-    window.onload = function () {
-        
-        document.getElementById('searchInput').addEventListener('input', searchUsers);
-    };
+    function displayFollowingUsers(users) {
+        const followingUsersDiv = document.getElementById('followingUsers');
+        followingUsersDiv.innerHTML = ''; // Clear previous content
 
+        // Filter users where 'following' is true
+        const followingUsers = users.filter(user => user.following === true);
+
+        // Check if there are any following users
+        if (followingUsers.length > 0) {
+            followingUsers.forEach(user => {
+                // Create the HTML structure for each user
+                const userItem = `
+                    <div class="p-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 cursor-pointer" data-user-id="${user.username}">
+                        <div class="flex items-center">
+                            <img src="${user.avatar_url}" alt="Avatar of ${user.username}" class="w-12 h-12 rounded-full mr-4">
+                            <div>
+                                <div class="font-semibold">${user.username}</div>
+                                <div class="text-gray-500 text-sm">${user.email}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Append the user card to the followingUsersDiv
+                followingUsersDiv.innerHTML += userItem;
+            });
+
+            // Attach click event listeners to dynamically generated items
+            document.querySelectorAll('[data-user-id]').forEach((el) => {
+                el.addEventListener('click', () => {
+                    window.location.href = `/users/${el.getAttribute('data-user-id')}`;
+                });
+            });
+
+        } else {
+            // If no users are being followed, show a message
+            followingUsersDiv.innerHTML = '<div class="p-4 text-center text-gray-500">No followed users.</div>';
+        }
+    }
+
+    // Function to sort and display users based on the selected filter (weekly, monthly, yearly, or all time)
+    function sortUsers() {
+        const sortedUsersDiv = document.getElementById('sortedUsers');
+        sortedUsersDiv.innerHTML = ''; // Clear previous sorted users
+
+        // Sort users based on the selected filter
+        const sortedUsers = users.sort((a, b) => {
+            if (currentFilter === "this_week") {
+                return b.aggregated_commits.last_week - a.aggregated_commits.last_week;
+            } else if (currentFilter === "this_month") {
+                return b.aggregated_commits.last_month - a.aggregated_commits.last_month;
+            } else if (currentFilter === "this_year") {
+                return b.aggregated_commits.last_year - a.aggregated_commits.last_year;
+            } else {
+                return b.aggregated_commits.all_time - a.aggregated_commits.all_time;
+            }
+        });
+
+        var duration = "";
+        if (currentFilter === "this_week") {
+            duration = "last_week";
+        } else if (currentFilter === "this_month") {
+            duration = "last_month";
+        } else if (currentFilter === "this_year") {
+            duration = "last_year";
+        } else {
+            duration = "all_time";
+        }
+       
+        sortedUsers.slice(0, 10).forEach(user => {
+            const userItem = `
+                <div class="p-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 cursor-pointer" data-user-id="${user.username}">
+                    <div class="flex items-center gap-4">
+                        <img src="${user.avatar_url}" alt="Avatar of ${user.username}" class="w-10 h-10 rounded-full">
+                        <div>
+                            <div class="font-semibold">${user.username}</div>
+                            <div class="text-sm text-gray-500">Commits: ${user.aggregated_commits[duration]}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            sortedUsersDiv.innerHTML += userItem;
+        });
+
+        // Attach click event listeners to dynamically generated items
+        document.querySelectorAll('[data-user-id]').forEach(el => {
+            el.addEventListener('click', () => {
+                window.location.href = `/users/${el.getAttribute('data-user-id')}`;
+            });
+        });
+    }
+
+    // Handle filter change event for sorting users
+    function handleFilterChange(event) {
+        currentFilter = event.target.value; // Update the current filter based on dropdown selection
+        sortUsers(); // Re-sort users based on the new filter
+    }
+
+    // Initialize the script when the window loads
+    window.onload = function () {
+        document.getElementById('searchInput').addEventListener('input', searchUsers);
+        document.getElementById('filterDropdown').addEventListener('change', handleFilterChange); // Listen for dropdown changes
+        sortUsers(); // Initially display sorted users by default (all time)
+        displayFollowingUsers(users);
+    };
 }
+
+
 
 
 templ Users(users []model.User) {
@@ -62,18 +172,62 @@ templ Users(users []model.User) {
         @Header()
         <body>
             @Navbar()
-            @UsersScript(users )
+            @UsersScript(users)
             <div class="container mx-auto py-10">
                 <h1 class="text-2xl font-bold text-center mb-8">Search Users</h1>
-                <div class="relative px-10">
+
+                <!-- Search Input -->
+                <div class="relative px-10 mb-4">
                     <input type="text" id="searchInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Search users by username, full name, or email...">
                     
                     <!-- Results Container -->
                     <div id="searchResults" class="z-10 mx-auto w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden">
-                       
+                        <!-- Search results will be dynamically injected here -->
                     </div>
+                </div>
+
+
+                <!-- Header and Dropdown for Sorting -->
+                <div class="flex justify-between items-center px-10 mb-2">
+                    <h2 class="text-lg font-semibold flex items-center">
+                        Following
+                    </h2>
+                   
+                </div>
+
+                <!-- Sorted Users List -->
+                <div id="followingUsers" class="mt-8 mb-2 px-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                    <!-- The top 20 users sorted by contributions will be displayed here as cards -->
+                </div>
+
+
+
+
+                <!-- Header and Dropdown for Sorting -->
+                <div class="flex justify-between items-center px-10 mb-4">
+                    <h2 class="text-lg font-semibold flex items-center">
+                        Top Contributors
+                        <span class="ml-2"> <!-- Added margin-left for spacing between text and icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" class="w-4 h-4">
+                                <!--! Font Awesome Free 6.6.0 by @fontawesome -->
+                                <path fill="#FFD43B" d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
+                            </svg>
+                        </span>
+                    </h2>
+                    <select id="filterDropdown" class="mt-2 px-4 py-2 border border-gray-300 rounded-lg">
+                        <option value="this_week">This Week</option>
+                        <option value="this_month">This Month</option>
+                        <option value="this_year">This Year</option>
+                        <option value="all_time">All Time</option>
+                    </select>
+                </div>
+
+                <!-- Sorted Users List -->
+                <div id="sortedUsers" class="mt-8 px-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                    <!-- The top 20 users sorted by contributions will be displayed here as cards -->
                 </div>
             </div>
         </body>
     </html>
 }
+

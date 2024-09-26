@@ -2,19 +2,59 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
-	"time"
 
+	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/config"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/db"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const userCollection = "users"
-const activitesCollection = "activities"
-const heatmapCollection = "heatmap"
+func ClearUsers() error {
+	collection := db.MongoDatabase.Collection(userCollection)
+	err := collection.Drop(context.Background())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func FollowUser(userName string) error {
+	collection := db.MongoDatabase.Collection(userCollection)
+	filter := bson.M{"username": userName}
+	update := bson.M{
+		"$set": bson.M{
+			"following": true,
+		},
+	}
+	opts := options.Update().SetUpsert(true)
+	_, err := collection.UpdateOne(context.Background(), filter, update, opts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func UnfollowUser(userName string) error {
+	collection := db.MongoDatabase.Collection(userCollection)
+	filter := bson.M{"username": userName}
+	update := bson.M{
+		"$set": bson.M{
+			"following": false,
+		},
+	}
+	opts := options.Update().SetUpsert(true)
+	_, err := collection.UpdateOne(context.Background(), filter, update, opts)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
 
 func GetAllUsers(page, limit string) ([]model.User, error) {
 	users := make([]model.User, 0)
@@ -104,114 +144,82 @@ func SearchUsers(query, page, limit string) ([]model.User, error) {
 	return users, nil
 }
 
-func GetUserActivityByDateRange(userName string, start_date_str string, end_date_str string, repo string) ([]model.Activity, error) {
-	collection := db.MongoDatabase.Collection(activitesCollection)
-	fmt.Println(start_date_str)
-	fmt.Println(end_date_str)
-	layout := "2006-01-02"
-	filter := bson.M{
-		"performedby.username": userName,
-	}
-	if start_date_str != "" {
-		start_date, err := time.Parse(layout, start_date_str)
-		if err != nil {
-			return nil, err
-		}
-
-		filter["date"] = bson.M{"$gte": start_date}
-	}
-
-	if end_date_str != "" {
-		end_date, err := time.Parse(layout, end_date_str)
-		if err != nil {
-			return nil, fmt.Errorf("invalid end date format: %v", err)
-		}
-
-		end_date = end_date.Add(24*time.Hour - time.Nanosecond)
-		if filter["date"] != nil {
-			filter["date"].(bson.M)["$lte"] = end_date
-		} else {
-			filter["date"] = bson.M{"$lte": end_date}
-		}
-
-	}
-	if repo != "" {
-		filter["repo.name"] = repo
-	}
-	cursor, err := collection.Find(context.Background(), filter)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(context.Background())
-	var activities []model.Activity
-	for cursor.Next(context.Background()) {
-		var activity model.Activity
-		if err := cursor.Decode(&activity); err != nil {
-			return nil, err
-		}
-		activities = append(activities, activity)
-	}
-	return activities, nil
-}
-
-func SearchUsersOfRepo(org, repo, query, page, limit string) ([]model.User, error) {
+func FetchUsersFromGitea(page int) ([]model.User, error) {
 	users := make([]model.User, 0)
-	collection := db.MongoDatabase.Collection(userCollection)
-	filter := bson.M{
-		"repos": bson.M{
-			"$elemMatch": bson.M{
-				"name":           repo,
-				"owner.username": org,
-			},
-		},
-		"username": bson.M{
-			"$regex":   query,
-			"$options": "i",
-		},
-	}
-	findOptions := options.Find()
-	if page != "" {
-		pageNum, err := strconv.Atoi(page)
-		if err != nil {
-			return nil, fmt.Errorf("invalid page number: %w", err)
-		}
-		limitNum := 10
-		if limit != "" {
-			limitNum, err = strconv.Atoi(limit)
-			if err != nil {
-				return nil, fmt.Errorf("invalid limit number: %w", err)
-			}
-		}
 
-		findOptions.SetLimit(int64(limitNum))
-		findOptions.SetSkip(int64((pageNum - 1) * limitNum))
-	}
-	cursor, err := collection.Find(context.Background(), filter, findOptions)
+	url := fmt.Sprintf("%s/admin/users?page=%d&access_token=%s", config.AppConfig.GITEA.Base_URL, page, config.AppConfig.GITEA.API_KEY)
+
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find users: %w", err)
+		return users, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
-	defer cursor.Close(context.Background())
 
-	for cursor.Next(context.Background()) {
-		var user model.User
-		if err := cursor.Decode(&user); err != nil {
-			return nil, err
-		}
-		users = append(users, user)
+	resp, err := client.Do(req)
+	if err != nil {
+		return users, fmt.Errorf("failed to make HTTP request: %w", err)
 	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return users, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&users); err != nil {
+		return users, fmt.Errorf("failed to decode JSON response: %w", err)
+	}
+
+	if len(users) == 0 {
+		return users, nil
+	}
+
+	next_users, err := FetchUsersFromGitea(page + 1)
+	if err != nil {
+		return users, err
+	}
+	users = append(users, next_users...)
 	return users, nil
 }
-
-func GetUserHeatmap(userName string) (model.Heatmap, error) {
-	heatmap := model.Heatmap{}
-	collection := db.MongoDatabase.Collection(heatmapCollection)
-	filter := bson.M{
-		"username": userName,
-	}
-	err := collection.FindOne(context.Background(), filter).Decode(&heatmap)
+func SyncUsersWithDB(users []model.User) error {
+	collection := db.MongoDatabase.Collection(userCollection)
+	existingUsers, err := GetAllUsers("", "")
 	if err != nil {
-		return heatmap, err
+		return err
+	}
+	existingUserMap := make(map[string]model.User)
+	for _, user := range users {
+		existingUserMap[user.Username] = user
+	}
+	documentsToBeAdded := make([]interface{}, 0, len(users))
+
+	for _, user := range users {
+
+		filter := bson.M{"username": user.Username}
+		var existingUser model.User
+		err := collection.FindOne(context.Background(), filter).Decode(&existingUser)
+
+		if err == mongo.ErrNoDocuments {
+			documentsToBeAdded = append(documentsToBeAdded, user)
+			continue
+		}
+	}
+	for _, user := range existingUsers {
+		if _, ok := existingUserMap[user.Username]; !ok {
+			_, err := collection.DeleteOne(context.Background(), bson.M{"username": user.Username})
+			if err != nil {
+				fmt.Println("Error deleting user ", user.Username)
+				continue
+			}
+
+		}
 	}
 
-	return heatmap, nil
+	if len(documentsToBeAdded) == 0 {
+		return nil
+	}
+	_, err = collection.InsertMany(context.Background(), documentsToBeAdded)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

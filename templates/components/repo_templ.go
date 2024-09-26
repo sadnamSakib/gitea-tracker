@@ -55,7 +55,7 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = RepoScript(org, repo, users, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = RepoScript(org, repo, users, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy, repo.Following).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -66,7 +66,7 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(repo.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 28, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 27, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -79,13 +79,13 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(repo.Created.Format("02 January 2006"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 32, Col: 97}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 31, Col: 97}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"overflow-y-auto rounded-lg\" style=\"max-height: 450px;\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><!-- Follow/Unfollow Button --><div class=\"text-center mb-4\"><button id=\"followRepoButton\" class=\"ml-2 px-2 py-1 rounded-lg font-medium\"><!-- The button text will be handled in the script --></button></div><div class=\"overflow-y-auto rounded-lg\" style=\"max-height: 450px;\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -97,7 +97,7 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(user.Username)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 37, Col: 188}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 43, Col: 188}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -110,7 +110,7 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(user.Avatar_url)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 41, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 46, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -123,7 +123,7 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(user.Username)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 46, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 51, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -136,7 +136,7 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(user.Email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 48, Col: 74}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 53, Col: 74}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -155,7 +155,7 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 				return strconv.Itoa(total)
 			}())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 59, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 64, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -227,7 +227,7 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 			return total
 		}()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 140, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/components/repo.templ`, Line: 143, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -241,14 +241,73 @@ func Repo(org string, repo model.Repo, users []model.User, dailyCommitCountListF
 	})
 }
 
-func RepoScript(org string, repo model.Repo, users []model.User, dailyCommitCountListForAllUsers [][]int, dateListForAllUsers []string, viewBy string) templ.ComponentScript {
+func RepoScript(org string, repo model.Repo, users []model.User, dailyCommitCountListForAllUsers [][]int, dateListForAllUsers []string, viewBy string, following bool) templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_RepoScript_b36e`,
-		Function: `function __templ_RepoScript_b36e(org, repo, users, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy){var lineChart = null;
+		Name: `__templ_RepoScript_0431`,
+		Function: `function __templ_RepoScript_0431(org, repo, users, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy, following){var lineChart = null;
     var piChart = null;
-    var selectedUserId =null;
-    function renderCommitDailyChart(dates, commitCounts) {
+    var selectedUserId = null;
 
+    async function toggleFollow() {
+        const followButton = document.getElementById('followRepoButton');
+
+        // Set the initial state of the button based on the ` + "`" + `following` + "`" + ` flag
+        if (following) {
+            followButton.innerText = 'Following';
+            followButton.classList.add('bg-green-500', 'text-white');
+        } else {
+            followButton.innerText = 'Follow';
+            followButton.classList.add('bg-blue-500', 'text-white');
+        }
+
+        // Handle follow/unfollow logic
+        followButton.addEventListener('click', async function () {
+            let apiUrl = '';
+
+            if (followButton.innerText === 'Follow') {
+                apiUrl = ` + "`" + `/api/orgs/${org}/repos/${repo.name}/follow` + "`" + `;
+
+                // Send follow request
+                const followResponse = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (followResponse.ok) {
+                    followButton.innerText = 'Following';
+                    followButton.classList.remove('bg-blue-500');
+                    followButton.classList.add('bg-green-500');
+                    following = true; // Update the following state
+                } else {
+                    console.error('Failed to follow the repository.');
+                }
+
+            } else {
+                apiUrl = ` + "`" + `/api/orgs/${org}/repos/${repo.name}/unfollow` + "`" + `;
+
+                // Send unfollow request
+                const unfollowResponse = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (unfollowResponse.ok) {
+                    followButton.innerText = 'Follow';
+                    followButton.classList.remove('bg-green-500');
+                    followButton.classList.add('bg-blue-500');
+                    following = false; // Update the following state
+                } else {
+                    console.error('Failed to unfollow the repository.');
+                }
+            }
+        });
+    }
+
+    function renderCommitDailyChart(dates, commitCounts) {
         if (lineChart) {
             lineChart.destroy();
         }
@@ -336,7 +395,6 @@ func RepoScript(org string, repo model.Repo, users []model.User, dailyCommitCoun
                 }
             }
         });
-        
     }
 
     window.onload = function () {
@@ -373,8 +431,6 @@ func RepoScript(org string, repo model.Repo, users []model.User, dailyCommitCoun
                 if (selectedUserId === clickedUserId) {
                     // Reset selected user
                     selectedUserId = null;
-                    
-                   
                     el.style.backgroundColor = 'white';
                     el.style.color = 'black';
                     
@@ -412,16 +468,18 @@ func RepoScript(org string, repo model.Repo, users []model.User, dailyCommitCoun
             });
         });
 
+        // Follow/Unfollow repo
+        toggleFollow();
+
         document.getElementById('viewBy').addEventListener('change', function () {
             var viewBy = document.getElementById('viewBy').value;
             var url = ` + "`" + `/orgs/${org}/repos/${repo.name}?viewBy=${viewBy}` + "`" + `;
             window.location.href = url;  
         });
     };
-    
 }`,
-		Call:       templ.SafeScript(`__templ_RepoScript_b36e`, org, repo, users, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy),
-		CallInline: templ.SafeScriptInline(`__templ_RepoScript_b36e`, org, repo, users, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy),
+		Call:       templ.SafeScript(`__templ_RepoScript_0431`, org, repo, users, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy, following),
+		CallInline: templ.SafeScriptInline(`__templ_RepoScript_0431`, org, repo, users, dailyCommitCountListForAllUsers, dateListForAllUsers, viewBy, following),
 	}
 }
 

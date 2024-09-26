@@ -26,13 +26,6 @@ func main() {
 	}))
 	e.Use(middleware.Recover())
 
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:3000"},
-		AllowMethods:     []string{echo.GET, echo.POST, echo.PUT, echo.DELETE},
-		AllowCredentials: true,
-		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
-	}))
-
 	router.InitRoutes(e)
 
 	c := service.InitCronScheduler()

@@ -13,5 +13,7 @@ func InitOrgRoutes(e *echo.Group) {
 	orgGroup.GET("/:org/repos", controller.GetAllRepoFromDB)
 	orgGroup.GET("/:org/repos/:repo/users", controller.GetAllUsersOfRepo)
 	orgGroup.GET("/:org/repos/:repo/users/search", controller.SearchUsersOfRepo)
+	orgGroup.POST("/:org/repos/:repo/follow", controller.FollowRepo)
+	orgGroup.POST("/:org/repos/:repo/unfollow", controller.UnfollowRepo)
 
 }

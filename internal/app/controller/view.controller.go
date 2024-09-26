@@ -15,19 +15,15 @@ import (
 )
 
 func RenderOrganizations(c echo.Context) error {
-	// Fetch the organizations from the repository
+
 	orgs, err := repository.GetAllOrgs()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	// Create the Organizations component
-
-	// Set the content type to "text/html"
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
 
-	// Create a context and render the component
-	ctx := context.Background() // Using a background context here
+	ctx := context.Background()
 	if err := components.Organizations(orgs).Render(ctx, c.Response().Writer); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -76,8 +72,7 @@ func RenderRepos(c echo.Context) error {
 
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
 
-	// Create a context and render the component
-	ctx := context.Background() // Using a background context here
+	ctx := context.Background()
 	if err := components.Repos(repos, org).Render(ctx, c.Response().Writer); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -86,7 +81,7 @@ func RenderRepos(c echo.Context) error {
 }
 
 func RenderUsers(c echo.Context) error {
-	// Fetch the organizations from the repository
+
 	page := c.QueryParam("page")
 	limit := c.QueryParam("limit")
 	users, err := repository.GetAllUsers(page, limit)
@@ -94,13 +89,9 @@ func RenderUsers(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	// Create the Organizations component
-
-	// Set the content type to "text/html"
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
 
-	// Create a context and render the component
-	ctx := context.Background() // Using a background context here
+	ctx := context.Background()
 	if err := components.Users(users).Render(ctx, c.Response().Writer); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
