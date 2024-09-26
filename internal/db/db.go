@@ -16,16 +16,10 @@ var MongoDatabase *mongo.Database
 func Connect() {
 	dbConfig := config.AppConfig.Database.MongoDB
 
-	clientOptions := options.Client().ApplyURI(dbConfig.URI)
-	client, err := mongo.NewClient(clientOptions)
-	if err != nil {
-		log.Fatalf("Failed to create MongoDB client: %s", err)
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	err = client.Connect(ctx)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(dbConfig.URI))
 	if err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %s", err)
 	}
@@ -42,6 +36,7 @@ func Connect() {
 }
 
 func Disconnect() {
+
 	if err := MongoClient.Disconnect(context.Background()); err != nil {
 		log.Fatalf("Failed to disconnect MongoDB client: %s", err)
 	}

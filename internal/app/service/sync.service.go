@@ -135,8 +135,8 @@ func SyncDailyData() {
 func InitCronScheduler() *cron.Cron {
 	dhakaTimezone, err := time.LoadLocation("Asia/Dhaka")
 	if err != nil {
-		fmt.Println("Error loading Dhaka timezone:", err)
-		return nil
+		fmt.Println("Error loading Dhaka timezone, using fallback:", err)
+		dhakaTimezone = time.FixedZone("Asia/Dhaka", 6*60*60)
 	}
 	c := cron.New(cron.WithLocation(dhakaTimezone))
 	c.AddFunc("30 3 * * *", SyncDailyData)
