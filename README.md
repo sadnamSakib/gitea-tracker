@@ -98,7 +98,7 @@ To install and run **Gitea-Tracker**, follow these steps:
     npm install
     ```
     ```bash
-    RUN npm run build:css
+    npm run build:css
     ```
 
 4. Run the application:
