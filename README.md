@@ -9,11 +9,9 @@
 - [Installation](#installation)
 - [Usage](#usage)
 - [Routes](#routes)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Project Overview
-**Gitea-Tracker** is a simple, web-based application designed to track issues and pull requests in [Gitea](https://gitea.io/). It helps users manage and visualize project progress, providing a lightweight alternative to heavier platforms.
+**Gitea-Tracker** is a simple, web-based application designed to track commit frequency in [Gitea](https://gitea.io/) Vivasoft organization. It helps the organization to track the commit frequency of developers and repositories, follow/unfollow users and repositories, and view user profiles and activities.
 
 ## Tech Stack
 - **Backend Framework**: Go Echo
@@ -24,7 +22,7 @@
 ## Project Structure
 The project follows an MVC (Model-View-Controller) architecture, which divides the responsibilities of the application into different layers. Here's the basic structure:
 ```
-gitea-tracker/
+./
 ├── cmd/                     # Contains the entry point for the application
 │   └── gitea-committer/     # Main application command
 │       └── main.go          # The entry point for the server
