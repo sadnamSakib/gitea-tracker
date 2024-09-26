@@ -12,6 +12,7 @@ import (
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/internal/db"
 	"gitea.vivasoftltd.com/Vivasoft/gitea-commiter-plugin/pkg/model"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -109,18 +110,36 @@ func FetchRepoOfOrgFromGitea(page int, orgName string) ([]model.Repo, error) {
 
 func SyncReposWithDB(repos []model.Repo) error {
 	collection := db.MongoDatabase.Collection(repoCollection)
-	documents := make([]interface{}, len(repos))
-	for i, repo := range repos {
-		documents[i] = repo
+
+	var reposToInsert []interface{}
+
+	for _, repo := range repos {
+
+		filter := bson.M{
+			"name":           repo.Name,
+			"owner.username": repo.Owner.Username,
+		}
+
+		err := collection.FindOne(context.Background(), filter).Err()
+		if err == mongo.ErrNoDocuments {
+
+			reposToInsert = append(reposToInsert, repo)
+		} else if err != nil {
+
+			return fmt.Errorf("failed to check existing repository: %v", err)
+		}
 	}
 
-	_, err := collection.InsertMany(context.Background(), documents)
-	if err != nil {
-		return err
+	if len(reposToInsert) > 0 {
+		_, err := collection.InsertMany(context.Background(), reposToInsert)
+		if err != nil {
+			return fmt.Errorf("failed to insert new repositories: %v", err)
+		}
 	}
 
 	return nil
 }
+
 func GetRepoActivityByDateRange(repoName string, start_date_str string, end_date_str string) ([]model.Activity, error) {
 	collection := db.MongoDatabase.Collection(activitesCollection)
 	layout := "2006-01-02"

@@ -30,11 +30,6 @@ func SyncAllRepos() (int, error) {
 		return 0, err
 	}
 
-	err = repository.ClearRepos()
-	if err != nil {
-		return 0, err
-	}
-
 	wg := sync.WaitGroup{}
 	sem := make(chan struct{}, goRoutines)
 	errorsChan := make(chan error, len(orgs))
